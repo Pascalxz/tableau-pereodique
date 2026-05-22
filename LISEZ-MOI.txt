@@ -1,0 +1,21 @@
+TABLEAU PÉRIODIQUE DE THOMAS — mode d'emploi
+=============================================
+
+CONTENU
+- index.html         : la page du tableau périodique
+- audio/             : les 118 voix (un MP3 par élément), voix française
+
+COMMENT L'UTILISER
+1. Garde le dossier "audio" À CÔTÉ du fichier index.html (ne les sépare pas).
+2. Double-clique sur index.html : ça s'ouvre dans ton navigateur.
+3. Clique sur un élément -> la voix lit le nom et l'explication,
+   et les mots s'allument un par un pendant la lecture.
+
+SUR TÉLÉPHONE / TABLETTE
+- Le plus simple : mets le dossier dans un service comme Google Drive,
+  ou héberge-le (Pascal : un simple déploiement Vercel statique fonctionne).
+- L'audio des MP3 joue partout, sans dépendre des voix installées sur l'appareil.
+
+NOTE
+- Si jamais un MP3 manquait, la page bascule automatiquement sur la voix
+  intégrée du navigateur (qui, elle, dépend de l'appareil).

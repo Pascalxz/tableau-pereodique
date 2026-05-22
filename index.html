@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le tableau périodique de Thomas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d1117; --bg2:#141b27; --ink:#f2f6ff; --soft:#9fb0c9;
+    --line:rgba(255,255,255,.09); --card:#1a2433;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:'Space Grotesk',sans-serif;
+    background:
+      radial-gradient(1200px 600px at 75% -10%, #1c2a44 0%, transparent 60%),
+      radial-gradient(900px 500px at 0% 100%, #1a2336 0%, transparent 55%),
+      var(--bg);
+    color:var(--ink); min-height:100vh; padding:24px 16px 70px;
+  }
+  header{max-width:1180px;margin:0 auto 6px;text-align:center}
+  .kicker{font-size:.8rem;letter-spacing:.32em;text-transform:uppercase;color:var(--soft);font-weight:600}
+  h1{
+    font-family:'Fraunces',serif;font-weight:700;line-height:1.04;
+    font-size:clamp(2.1rem,5.5vw,3.6rem);margin:6px 0 4px;
+    background:linear-gradient(95deg,#ffd23f,#6ee87a 45%,#5ec8f2);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .sub{color:var(--soft);font-size:1.02rem}
+
+  /* Barre d'outils */
+  .toolbar{max-width:1180px;margin:20px auto 18px;display:flex;flex-direction:column;gap:14px}
+  .search-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center}
+  .search{
+    flex:1;min-width:220px;max-width:420px;display:flex;align-items:center;gap:10px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 15px;
+  }
+  .search input{flex:1;background:none;border:none;outline:none;color:var(--ink);font-family:inherit;font-size:1rem}
+  .search input::placeholder{color:var(--soft)}
+  .toggle{
+    display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:11px 15px;color:var(--soft);font-size:.92rem;cursor:pointer;user-select:none
+  }
+  .toggle input{width:18px;height:18px;accent-color:#6ee87a}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .leg{
+    font-family:inherit;font-size:.82rem;padding:7px 13px;border-radius:999px;cursor:pointer;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--ink);
+    display:flex;align-items:center;gap:7px;transition:.15s;opacity:.65
+  }
+  .leg:hover{opacity:1}
+  .leg.active{opacity:1;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3)}
+  .dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+
+  /* Le tableau */
+  .scroller{overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+  .table{
+    display:grid;grid-template-columns:repeat(18,minmax(46px,1fr));
+    gap:5px;max-width:1180px;margin:0 auto;min-width:880px
+  }
+  .gap{grid-column:span 1}
+  .fblock{height:14px}
+  .el{
+    position:relative;aspect-ratio:1;border:none;border-radius:9px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:#0c1118;font-family:'Space Grotesk',sans-serif;padding:2px;
+    transition:transform .12s,box-shadow .12s,opacity .2s;overflow:hidden
+  }
+  .el:hover{transform:translateY(-3px) scale(1.05);z-index:5;box-shadow:0 10px 22px rgba(0,0,0,.45)}
+  .el .num{position:absolute;top:3px;left:5px;font-size:.52rem;font-weight:600;opacity:.7}
+  .el .em{font-size:1.15rem;line-height:1;margin-top:3px}
+  .el .sym{font-size:1.15rem;font-weight:700;line-height:1}
+  .el .nm{font-size:.46rem;font-weight:600;opacity:.8;text-align:center;line-height:1.05;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+  .el.dim{opacity:.12;filter:grayscale(.6)}
+  .el.match{outline:3px solid #fff;outline-offset:1px}
+  .frow-label{
+    grid-column:span 2;display:flex;align-items:center;justify-content:flex-end;
+    padding-right:8px;color:var(--soft);font-size:.66rem;font-style:italic
+  }
+
+  /* Détail */
+  .overlay{position:fixed;inset:0;background:rgba(6,9,15,.8);backdrop-filter:blur(7px);
+    display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
+  .overlay.show{display:flex;animation:fade .2s}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .detail{
+    background:linear-gradient(180deg,var(--bg2),var(--card));
+    border-radius:26px;padding:30px 28px;max-width:440px;width:100%;
+    border:1px solid var(--line);position:relative;animation:rise .28s
+  }
+  @keyframes rise{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .d-top{display:flex;align-items:center;gap:18px;margin-bottom:18px}
+  .d-tile{width:88px;height:88px;border-radius:18px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;color:#0c1118;flex-shrink:0}
+  .d-tile .em{font-size:1.9rem;line-height:1}
+  .d-tile .sym{font-size:1.7rem;font-weight:700;line-height:1}
+  .d-head h2{font-family:'Fraunces',serif;font-size:1.9rem;line-height:1.05}
+  .d-head .meta{color:var(--soft);font-size:.92rem;margin-top:4px}
+  .d-cat{display:inline-block;margin-top:8px;font-size:.78rem;padding:4px 11px;border-radius:999px;color:#0c1118;font-weight:600}
+  .d-desc{font-size:1.18rem;line-height:1.6;color:var(--ink);margin:6px 0 4px}
+  .d-desc .read{border-radius:5px;padding:0 2px;transition:background .15s}
+  .d-desc .read.on{background:#ffd23f;color:#0c1118}
+  .btns{display:flex;gap:11px;margin-top:22px}
+  .btn{flex:1;border:none;border-radius:14px;padding:15px;font-size:1rem;font-family:inherit;
+    font-weight:600;cursor:pointer;transition:transform .1s,filter .15s}
+  .btn:active{transform:translateY(2px)}
+  .btn-listen{background:#6ee87a;color:#0c1118}
+  .btn-listen.playing{background:#ffd23f}
+  .btn-stop{background:rgba(255,255,255,.1);color:var(--ink);flex:0 0 56px}
+  .btn-close{background:rgba(255,255,255,.1);color:var(--ink);flex:0 0 56px}
+  .nav{display:flex;justify-content:space-between;margin-top:12px}
+  .nav button{background:none;border:1px solid var(--line);color:var(--soft);
+    border-radius:10px;padding:8px 14px;cursor:pointer;font-family:inherit;font-size:.9rem}
+  .nav button:hover{color:var(--ink);border-color:rgba(255,255,255,.3)}
+  .hint{text-align:center;color:var(--soft);font-size:.9rem;max-width:1180px;margin:18px auto 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">Pour Thomas</div>
+  <h1>Le tableau périodique</h1>
+  <p class="sub">Les 118 éléments qui composent tout l'univers. Touche-en un pour l'écouter et le lire.</p>
+</header>
+
+<div class="toolbar">
+  <div class="search-row">
+    <div class="search">
+      <span>🔍</span>
+      <input id="search" type="text" placeholder="Cherche un élément (or, fer, oxygène...)" autocomplete="off">
+    </div>
+    <label class="toggle"><input type="checkbox" id="autoread" checked> Lire à voix haute en ouvrant</label>
+  </div>
+  <div class="legend" id="legend"><button class="leg" data-cat="nonmetal"><i class="dot" style="background:#6ee87a"></i>Non-métaux</button><button class="leg" data-cat="noble"><i class="dot" style="background:#5ec8f2"></i>Gaz nobles</button><button class="leg" data-cat="alkali"><i class="dot" style="background:#ff8f6b"></i>Métaux alcalins</button><button class="leg" data-cat="alkaline"><i class="dot" style="background:#ffb454"></i>Alcalino-terreux</button><button class="leg" data-cat="transition"><i class="dot" style="background:#ffd23f"></i>Métaux de transition</button><button class="leg" data-cat="postmetal"><i class="dot" style="background:#b9c44a"></i>Métaux pauvres</button><button class="leg" data-cat="metalloid"><i class="dot" style="background:#7ee0c0"></i>Métalloïdes</button><button class="leg" data-cat="halogen"><i class="dot" style="background:#c98bff"></i>Halogènes</button><button class="leg" data-cat="lanthanide"><i class="dot" style="background:#ff9ec7"></i>Lanthanides</button><button class="leg" data-cat="actinide"><i class="dot" style="background:#f06292"></i>Actinides</button></div>
+</div>
+
+<div class="scroller">
+  <div class="table" id="table"></div>
+</div>
+
+<p class="hint">💡 Astuce : la voix lit le texte pendant que les mots s'allument un par un — pratique pour suivre en lisant. Le bouton ◀ ▶ permet de passer à l'élément suivant.</p>
+
+<div class="overlay" id="overlay">
+  <div class="detail">
+    <div class="d-top">
+      <div class="d-tile" id="d-tile"><span class="em" id="d-em"></span><span class="sym" id="d-sym"></span></div>
+      <div class="d-head">
+        <h2 id="d-name"></h2>
+        <div class="meta" id="d-meta"></div>
+        <span class="d-cat" id="d-cat"></span>
+      </div>
+    </div>
+    <p class="d-desc" id="d-desc"></p>
+    <div class="btns">
+      <button class="btn btn-listen" id="b-listen">🔊 Écouter</button>
+      <button class="btn btn-stop" id="b-stop" title="Arrêter">⏹</button>
+      <button class="btn btn-close" id="b-close" title="Fermer">✕</button>
+    </div>
+    <div class="nav">
+      <button id="b-prev">◀ Avant</button>
+      <button id="b-next">Après ▶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = {"elements": [{"num": 1, "sym": "H", "nm": "Hydrogène", "grp": 1, "per": 1, "cat": "nonmetal", "emoji": "💧", "desc": "Le plus petit et le plus léger de tous les éléments. Mélangé à l'oxygène, il forme l'eau. C'est aussi le carburant des étoiles comme le Soleil."}, {"num": 2, "sym": "He", "nm": "Hélium", "grp": 18, "per": 1, "cat": "noble", "emoji": "🎈", "desc": "Le gaz qui fait flotter les ballons. Il est tellement léger et calme qu'il ne réagit avec presque rien."}, {"num": 3, "sym": "Li", "nm": "Lithium", "grp": 1, "per": 2, "cat": "alkali", "emoji": "🔋", "desc": "Un métal très léger. On l'utilise dans les batteries des téléphones et des voitures électriques."}, {"num": 4, "sym": "Be", "nm": "Béryllium", "grp": 2, "per": 2, "cat": "alkaline", "emoji": "🛰️", "desc": "Un métal léger et solide. On s'en sert dans des pièces d'avions et de satellites."}, {"num": 5, "sym": "B", "nm": "Bore", "grp": 13, "per": 2, "cat": "metalloid", "emoji": "🧴", "desc": "On le trouve dans certains savons et dans le verre résistant à la chaleur."}, {"num": 6, "sym": "C", "nm": "Carbone", "grp": 14, "per": 2, "cat": "nonmetal", "emoji": "✏️", "desc": "La base de toute la vie sur Terre. Il est dans ton corps, dans les arbres, le crayon, et même les diamants !"}, {"num": 7, "sym": "N", "nm": "Azote", "grp": 15, "per": 2, "cat": "nonmetal", "emoji": "🌬️", "desc": "Le gaz le plus présent dans l'air qu'on respire. Il sert aussi à faire pousser les plantes."}, {"num": 8, "sym": "O", "nm": "Oxygène", "grp": 16, "per": 2, "cat": "nonmetal", "emoji": "😮‍💨", "desc": "Le gaz indispensable pour respirer et vivre. Le feu en a aussi besoin pour brûler."}, {"num": 9, "sym": "F", "nm": "Fluor", "grp": 17, "per": 2, "cat": "halogen", "emoji": "🦷", "desc": "On en met dans le dentifrice pour protéger les dents contre les caries."}, {"num": 10, "sym": "Ne", "nm": "Néon", "grp": 18, "per": 2, "cat": "noble", "emoji": "💡", "desc": "Le gaz qui fait briller les enseignes lumineuses avec des couleurs vives."}, {"num": 11, "sym": "Na", "nm": "Sodium", "grp": 1, "per": 3, "cat": "alkali", "emoji": "🧂", "desc": "Avec le chlore, il forme le sel de table. Seul, c'est un métal mou qui réagit fort avec l'eau."}, {"num": 12, "sym": "Mg", "nm": "Magnésium", "grp": 2, "per": 3, "cat": "alkaline", "emoji": "✨", "desc": "Un métal léger qui brûle avec une lumière blanche très vive, comme dans les feux d'artifice."}, {"num": 13, "sym": "Al", "nm": "Aluminium", "grp": 13, "per": 3, "cat": "postmetal", "emoji": "🥫", "desc": "Le métal léger des canettes, du papier alu et des cadres de vélo."}, {"num": 14, "sym": "Si", "nm": "Silicium", "grp": 14, "per": 3, "cat": "metalloid", "emoji": "💻", "desc": "Le cœur des puces d'ordinateurs et des téléphones. C'est aussi le sable des plages."}, {"num": 15, "sym": "P", "nm": "Phosphore", "grp": 15, "per": 3, "cat": "nonmetal", "emoji": "🔥", "desc": "Il s'enflamme facilement : c'est lui au bout des allumettes. Il est aussi dans tes os."}, {"num": 16, "sym": "S", "nm": "Soufre", "grp": 16, "per": 3, "cat": "nonmetal", "emoji": "🌋", "desc": "Une poudre jaune qui sent l'œuf pourri. On en trouve près des volcans."}, {"num": 17, "sym": "Cl", "nm": "Chlore", "grp": 17, "per": 3, "cat": "halogen", "emoji": "🏊", "desc": "Il garde l'eau des piscines propre et fait partie du sel de table."}, {"num": 18, "sym": "Ar", "nm": "Argon", "grp": 18, "per": 3, "cat": "noble", "emoji": "🔆", "desc": "Un gaz très calme qu'on met dans les ampoules pour les faire durer plus longtemps."}, {"num": 19, "sym": "K", "nm": "Potassium", "grp": 1, "per": 4, "cat": "alkali", "emoji": "🍌", "desc": "Il donne de l'énergie à ton corps. Il y en a beaucoup dans les bananes."}, {"num": 20, "sym": "Ca", "nm": "Calcium", "grp": 2, "per": 4, "cat": "alkaline", "emoji": "🦴", "desc": "Il rend les os et les dents solides. Présent dans le lait et le fromage."}, {"num": 21, "sym": "Sc", "nm": "Scandium", "grp": 3, "per": 4, "cat": "transition", "emoji": "🚲", "desc": "Un métal léger et solide utilisé dans des cadres de vélo et des avions de sport."}, {"num": 22, "sym": "Ti", "nm": "Titane", "grp": 4, "per": 4, "cat": "transition", "emoji": "🦾", "desc": "Un métal très solide mais léger. On en fait des prothèses, des avions et des montres."}, {"num": 23, "sym": "V", "nm": "Vanadium", "grp": 5, "per": 4, "cat": "transition", "emoji": "🔧", "desc": "On l'ajoute à l'acier pour le rendre plus résistant, comme dans les outils."}, {"num": 24, "sym": "Cr", "nm": "Chrome", "grp": 6, "per": 4, "cat": "transition", "emoji": "🪞", "desc": "Il donne le brillant des pièces métalliques et protège l'acier de la rouille."}, {"num": 25, "sym": "Mn", "nm": "Manganèse", "grp": 7, "per": 4, "cat": "transition", "emoji": "🔩", "desc": "On le mélange à l'acier pour le rendre plus dur. Il est aussi dans certaines piles."}, {"num": 26, "sym": "Fe", "nm": "Fer", "grp": 8, "per": 4, "cat": "transition", "emoji": "🧲", "desc": "Un métal très solide attiré par les aimants. Il est dans les ponts, les voitures et ton sang."}, {"num": 27, "sym": "Co", "nm": "Cobalt", "grp": 9, "per": 4, "cat": "transition", "emoji": "🔵", "desc": "Il donne une belle couleur bleue au verre et sert dans les batteries."}, {"num": 28, "sym": "Ni", "nm": "Nickel", "grp": 10, "per": 4, "cat": "transition", "emoji": "🪙", "desc": "Un métal brillant utilisé dans des pièces de monnaie et pour protéger d'autres métaux."}, {"num": 29, "sym": "Cu", "nm": "Cuivre", "grp": 11, "per": 4, "cat": "transition", "emoji": "🔌", "desc": "Le métal orangé des fils électriques. Il transporte très bien l'électricité."}, {"num": 30, "sym": "Zn", "nm": "Zinc", "grp": 12, "per": 4, "cat": "transition", "emoji": "🛡️", "desc": "Il protège le fer de la rouille et entre dans la fabrication des piles."}, {"num": 31, "sym": "Ga", "nm": "Gallium", "grp": 13, "per": 4, "cat": "postmetal", "emoji": "🫠", "desc": "Un métal qui fond dans la main tellement il craint la chaleur ! Utilisé dans l'électronique."}, {"num": 32, "sym": "Ge", "nm": "Germanium", "grp": 14, "per": 4, "cat": "metalloid", "emoji": "📷", "desc": "On l'utilise dans des caméras et des fibres optiques pour internet."}, {"num": 33, "sym": "As", "nm": "Arsenic", "grp": 15, "per": 4, "cat": "metalloid", "emoji": "☠️", "desc": "Attention, c'est un poison ! On l'a longtemps utilisé dans l'histoire, mais c'est dangereux."}, {"num": 34, "sym": "Se", "nm": "Sélénium", "grp": 16, "per": 4, "cat": "nonmetal", "emoji": "📸", "desc": "Il était utilisé dans les anciens appareils photo et photocopieuses."}, {"num": 35, "sym": "Br", "nm": "Brome", "grp": 17, "per": 4, "cat": "halogen", "emoji": "🟤", "desc": "Un des rares éléments liquides à température normale. Il est rouge-brun et sent très fort."}, {"num": 36, "sym": "Kr", "nm": "Krypton", "grp": 18, "per": 4, "cat": "noble", "emoji": "🦸", "desc": "Oui, comme la planète de Superman ! En vrai, c'est un gaz rare utilisé dans certaines lampes."}, {"num": 37, "sym": "Rb", "nm": "Rubidium", "grp": 1, "per": 5, "cat": "alkali", "emoji": "⏰", "desc": "Un métal mou utilisé dans des horloges atomiques ultra précises."}, {"num": 38, "sym": "Sr", "nm": "Strontium", "grp": 2, "per": 5, "cat": "alkaline", "emoji": "🎆", "desc": "Il donne la couleur rouge vif aux feux d'artifice."}, {"num": 39, "sym": "Y", "nm": "Yttrium", "grp": 3, "per": 5, "cat": "transition", "emoji": "🔴", "desc": "Utilisé dans les écrans et les LED pour produire des couleurs."}, {"num": 40, "sym": "Zr", "nm": "Zirconium", "grp": 4, "per": 5, "cat": "transition", "emoji": "💎", "desc": "On en fait de fausses pierres précieuses qui brillent comme des diamants."}, {"num": 41, "sym": "Nb", "nm": "Niobium", "grp": 5, "per": 5, "cat": "transition", "emoji": "🧲", "desc": "Utilisé dans des aimants super puissants, comme ceux des IRM à l'hôpital."}, {"num": 42, "sym": "Mo", "nm": "Molybdène", "grp": 6, "per": 5, "cat": "transition", "emoji": "🛠️", "desc": "On l'ajoute à l'acier des outils et des moteurs pour résister à la chaleur."}, {"num": 43, "sym": "Tc", "nm": "Technétium", "grp": 7, "per": 5, "cat": "transition", "emoji": "🏥", "desc": "Un élément fabriqué par l'humain, utilisé pour voir l'intérieur du corps à l'hôpital."}, {"num": 44, "sym": "Ru", "nm": "Ruthénium", "grp": 8, "per": 5, "cat": "transition", "emoji": "🖊️", "desc": "On en met sur certaines pointes de stylos haut de gamme et dans l'électronique."}, {"num": 45, "sym": "Rh", "nm": "Rhodium", "grp": 9, "per": 5, "cat": "transition", "emoji": "🚗", "desc": "Très précieux ! Il nettoie les gaz d'échappement des voitures."}, {"num": 46, "sym": "Pd", "nm": "Palladium", "grp": 10, "per": 5, "cat": "transition", "emoji": "💍", "desc": "Un métal précieux utilisé dans les bijoux et les pots d'échappement."}, {"num": 47, "sym": "Ag", "nm": "Argent", "grp": 11, "per": 5, "cat": "transition", "emoji": "🥈", "desc": "Un métal brillant et précieux. C'est la médaille des deuxièmes et il conduit super bien l'électricité."}, {"num": 48, "sym": "Cd", "nm": "Cadmium", "grp": 12, "per": 5, "cat": "transition", "emoji": "🔋", "desc": "Utilisé dans d'anciennes batteries. C'est toxique, donc on l'évite aujourd'hui."}, {"num": 49, "sym": "In", "nm": "Indium", "grp": 13, "per": 5, "cat": "postmetal", "emoji": "📱", "desc": "On l'utilise dans les écrans tactiles des téléphones."}, {"num": 50, "sym": "Sn", "nm": "Étain", "grp": 14, "per": 5, "cat": "postmetal", "emoji": "🥫", "desc": "Il recouvre l'intérieur des boîtes de conserve pour les protéger."}, {"num": 51, "sym": "Sb", "nm": "Antimoine", "grp": 15, "per": 5, "cat": "metalloid", "emoji": "🔥", "desc": "On l'utilise dans des produits qui empêchent les objets de prendre feu."}, {"num": 52, "sym": "Te", "nm": "Tellure", "grp": 16, "per": 5, "cat": "metalloid", "emoji": "☀️", "desc": "Utilisé dans certains panneaux solaires pour capter la lumière."}, {"num": 53, "sym": "I", "nm": "Iode", "grp": 17, "per": 5, "cat": "halogen", "emoji": "🩹", "desc": "On le met sur les plaies pour tuer les microbes. Ton corps en a besoin en petite quantité."}, {"num": 54, "sym": "Xe", "nm": "Xénon", "grp": 18, "per": 5, "cat": "noble", "emoji": "🚥", "desc": "Un gaz rare utilisé dans des phares de voiture très lumineux."}, {"num": 55, "sym": "Cs", "nm": "Césium", "grp": 1, "per": 6, "cat": "alkali", "emoji": "⏱️", "desc": "Il sert à définir la seconde exacte dans les horloges les plus précises du monde."}, {"num": 56, "sym": "Ba", "nm": "Baryum", "grp": 2, "per": 6, "cat": "alkaline", "emoji": "🩻", "desc": "On le boit avant certaines radios pour mieux voir l'intérieur du corps."}, {"num": 57, "sym": "La", "nm": "Lanthane", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "🎥", "desc": "Utilisé dans les lentilles de caméras et d'appareils photo de qualité."}, {"num": 58, "sym": "Ce", "nm": "Cérium", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "🔦", "desc": "On s'en sert pour polir le verre et dans les briquets (les étincelles)."}, {"num": 59, "sym": "Pr", "nm": "Praséodyme", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "🥽", "desc": "Il colore en vert les lunettes des souffleurs de verre et des soudeurs."}, {"num": 60, "sym": "Nd", "nm": "Néodyme", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "🧲", "desc": "Il fait les aimants les plus puissants, comme dans les écouteurs et les disques durs."}, {"num": 61, "sym": "Pm", "nm": "Prométhium", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "🌙", "desc": "Un élément rare qui peut faire briller certaines peintures dans le noir."}, {"num": 62, "sym": "Sm", "nm": "Samarium", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "🧲", "desc": "Utilisé dans des aimants qui résistent à la chaleur."}, {"num": 63, "sym": "Eu", "nm": "Europium", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "💶", "desc": "Il sert à protéger les billets de banque contre les faussaires (encre qui brille)."}, {"num": 64, "sym": "Gd", "nm": "Gadolinium", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "🏥", "desc": "Injecté lors de certaines IRM pour voir plus clairement les images."}, {"num": 65, "sym": "Tb", "nm": "Terbium", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "📺", "desc": "Il produit la couleur verte dans les écrans et les lampes."}, {"num": 66, "sym": "Dy", "nm": "Dysprosium", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "🔋", "desc": "Utilisé dans les aimants des voitures électriques et des éoliennes."}, {"num": 67, "sym": "Ho", "nm": "Holmium", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "🔬", "desc": "Il fait partie des lasers les plus puissants utilisés en médecine."}, {"num": 68, "sym": "Er", "nm": "Erbium", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "🌐", "desc": "Il aide à transporter internet dans les fibres optiques sur de longues distances."}, {"num": 69, "sym": "Tm", "nm": "Thulium", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "🩻", "desc": "Utilisé dans de petits appareils de radiographie portables."}, {"num": 70, "sym": "Yb", "nm": "Ytterbium", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "📡", "desc": "On l'utilise dans certaines horloges atomiques et lasers."}, {"num": 71, "sym": "Lu", "nm": "Lutécium", "grp": 3, "per": 8, "cat": "lanthanide", "emoji": "🛢️", "desc": "Il aide à transformer le pétrole en essence dans les raffineries."}, {"num": 72, "sym": "Hf", "nm": "Hafnium", "grp": 4, "per": 6, "cat": "transition", "emoji": "☢️", "desc": "Utilisé dans les centrales nucléaires pour contrôler la réaction."}, {"num": 73, "sym": "Ta", "nm": "Tantale", "grp": 5, "per": 6, "cat": "transition", "emoji": "📱", "desc": "On le trouve dans presque tous les téléphones, dans de minuscules pièces électroniques."}, {"num": 74, "sym": "W", "nm": "Tungstène", "grp": 6, "per": 6, "cat": "transition", "emoji": "💡", "desc": "Le métal qui résiste le mieux à la chaleur. Il était dans les filaments des ampoules."}, {"num": 75, "sym": "Re", "nm": "Rhénium", "grp": 7, "per": 6, "cat": "transition", "emoji": "✈️", "desc": "Ajouté aux réacteurs d'avion pour supporter des chaleurs extrêmes."}, {"num": 76, "sym": "Os", "nm": "Osmium", "grp": 8, "per": 6, "cat": "transition", "emoji": "🖋️", "desc": "Le métal le plus dense ! Tout petit, il pèse très lourd. Utilisé sur des pointes de stylo."}, {"num": 77, "sym": "Ir", "nm": "Iridium", "grp": 9, "per": 6, "cat": "transition", "emoji": "☄️", "desc": "Très rare sur Terre, mais fréquent dans les météorites tombées de l'espace."}, {"num": 78, "sym": "Pt", "nm": "Platine", "grp": 10, "per": 6, "cat": "transition", "emoji": "💍", "desc": "Un métal précieux encore plus rare que l'or. Utilisé en bijouterie et dans les voitures."}, {"num": 79, "sym": "Au", "nm": "Or", "grp": 11, "per": 6, "cat": "transition", "emoji": "🏆", "desc": "Le célèbre métal jaune qui brille. Bijoux, médailles d'or et même dans l'électronique."}, {"num": 80, "sym": "Hg", "nm": "Mercure", "grp": 12, "per": 6, "cat": "transition", "emoji": "🌡️", "desc": "Un métal liquide qui coule comme de l'eau ! Il était dans les vieux thermomètres."}, {"num": 81, "sym": "Tl", "nm": "Thallium", "grp": 13, "per": 6, "cat": "postmetal", "emoji": "☠️", "desc": "Très toxique. Il a servi autrefois contre les rats, mais c'est dangereux."}, {"num": 82, "sym": "Pb", "nm": "Plomb", "grp": 14, "per": 6, "cat": "postmetal", "emoji": "⚓", "desc": "Un métal très lourd et mou. On l'utilisait dans les tuyaux, mais on l'évite car il est toxique."}, {"num": 83, "sym": "Bi", "nm": "Bismuth", "grp": 15, "per": 6, "cat": "postmetal", "emoji": "🌈", "desc": "Il forme des cristaux aux couleurs d'arc-en-ciel ! Présent dans certains médicaments pour l'estomac."}, {"num": 84, "sym": "Po", "nm": "Polonium", "grp": 16, "per": 6, "cat": "metalloid", "emoji": "☢️", "desc": "Un élément radioactif et très dangereux, découvert par Marie Curie."}, {"num": 85, "sym": "At", "nm": "Astate", "grp": 17, "per": 6, "cat": "halogen", "emoji": "🔬", "desc": "Un des éléments les plus rares sur Terre. On en a fabriqué très peu en laboratoire."}, {"num": 86, "sym": "Rn", "nm": "Radon", "grp": 18, "per": 6, "cat": "noble", "emoji": "🏠", "desc": "Un gaz radioactif invisible qui peut s'accumuler dans certaines maisons."}, {"num": 87, "sym": "Fr", "nm": "Francium", "grp": 1, "per": 7, "cat": "alkali", "emoji": "⚛️", "desc": "Un des éléments les plus rares au monde. Il disparaît presque aussitôt qu'il apparaît."}, {"num": 88, "sym": "Ra", "nm": "Radium", "grp": 2, "per": 7, "cat": "alkaline", "emoji": "🌟", "desc": "Il brille dans le noir ! Découvert par Marie Curie, mais il est radioactif et dangereux."}, {"num": 89, "sym": "Ac", "nm": "Actinium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "🔆", "desc": "Un élément radioactif qui brille faiblement dans l'obscurité."}, {"num": 90, "sym": "Th", "nm": "Thorium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "⚡", "desc": "Une source d'énergie nucléaire possible pour le futur."}, {"num": 91, "sym": "Pa", "nm": "Protactinium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "🧪", "desc": "Un élément radioactif très rare, étudié surtout en laboratoire."}, {"num": 92, "sym": "U", "nm": "Uranium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "☢️", "desc": "Le carburant des centrales nucléaires qui produisent de l'électricité."}, {"num": 93, "sym": "Np", "nm": "Neptunium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "🪐", "desc": "Nommé d'après la planète Neptune. C'est un élément fabriqué par l'humain."}, {"num": 94, "sym": "Pu", "nm": "Plutonium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "🚀", "desc": "Utilisé comme source d'énergie dans certaines sondes spatiales lointaines."}, {"num": 95, "sym": "Am", "nm": "Américium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "🚨", "desc": "On en trouve une toute petite quantité dans les détecteurs de fumée !"}, {"num": 96, "sym": "Cm", "nm": "Curium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "👩‍🔬", "desc": "Nommé en l'honneur de Marie et Pierre Curie. Utilisé dans des sondes spatiales."}, {"num": 97, "sym": "Bk", "nm": "Berkélium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "🏫", "desc": "Nommé d'après la ville de Berkeley, où il a été créé en laboratoire."}, {"num": 98, "sym": "Cf", "nm": "Californium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "🔍", "desc": "Nommé d'après la Californie. Sert à détecter des métaux et explorer le sous-sol."}, {"num": 99, "sym": "Es", "nm": "Einsteinium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "🧠", "desc": "Nommé en l'honneur d'Albert Einstein. Fabriqué uniquement en laboratoire."}, {"num": 100, "sym": "Fm", "nm": "Fermium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "⚛️", "desc": "Nommé d'après le savant Enrico Fermi. On n'en fabrique que de minuscules quantités."}, {"num": 101, "sym": "Md", "nm": "Mendélévium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "📋", "desc": "Nommé d'après Mendeleïev, l'inventeur du tableau périodique !"}, {"num": 102, "sym": "No", "nm": "Nobélium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "🏅", "desc": "Nommé d'après Alfred Nobel, créateur des prix Nobel."}, {"num": 103, "sym": "Lr", "nm": "Lawrencium", "grp": 3, "per": 9, "cat": "actinide", "emoji": "🔬", "desc": "Nommé d'après l'inventeur d'une machine qui casse les atomes."}, {"num": 104, "sym": "Rf", "nm": "Rutherfordium", "grp": 4, "per": 7, "cat": "transition", "emoji": "💥", "desc": "Un élément très lourd fabriqué par l'humain, qui disparaît en un instant."}, {"num": 105, "sym": "Db", "nm": "Dubnium", "grp": 5, "per": 7, "cat": "transition", "emoji": "🏙️", "desc": "Nommé d'après la ville russe de Dubna, célèbre pour ses laboratoires."}, {"num": 106, "sym": "Sg", "nm": "Seaborgium", "grp": 6, "per": 7, "cat": "transition", "emoji": "🧑‍🔬", "desc": "Nommé d'après un savant, de son vivant — un grand honneur rare !"}, {"num": 107, "sym": "Bh", "nm": "Bohrium", "grp": 7, "per": 7, "cat": "transition", "emoji": "⚛️", "desc": "Nommé d'après Niels Bohr, qui a expliqué comment sont faits les atomes."}, {"num": 108, "sym": "Hs", "nm": "Hassium", "grp": 8, "per": 7, "cat": "transition", "emoji": "🇩🇪", "desc": "Nommé d'après une région d'Allemagne où il a été créé."}, {"num": 109, "sym": "Mt", "nm": "Meitnérium", "grp": 9, "per": 7, "cat": "transition", "emoji": "👩‍🔬", "desc": "Nommé d'après Lise Meitner, une physicienne géniale."}, {"num": 110, "sym": "Ds", "nm": "Darmstadtium", "grp": 10, "per": 7, "cat": "transition", "emoji": "🔬", "desc": "Créé dans la ville de Darmstadt, en Allemagne. Il existe à peine une fraction de seconde."}, {"num": 111, "sym": "Rg", "nm": "Roentgenium", "grp": 11, "per": 7, "cat": "transition", "emoji": "🩻", "desc": "Nommé d'après l'inventeur des rayons X, qui voient à travers le corps."}, {"num": 112, "sym": "Cn", "nm": "Copernicium", "grp": 12, "per": 7, "cat": "transition", "emoji": "🔭", "desc": "Nommé d'après Copernic, qui a découvert que la Terre tourne autour du Soleil."}, {"num": 113, "sym": "Nh", "nm": "Nihonium", "grp": 13, "per": 7, "cat": "postmetal", "emoji": "🇯🇵", "desc": "Le premier élément découvert au Japon. 'Nihon' veut dire Japon."}, {"num": 114, "sym": "Fl", "nm": "Flérovium", "grp": 14, "per": 7, "cat": "postmetal", "emoji": "🔬", "desc": "Nommé d'après un laboratoire russe. Il n'existe qu'une fraction de seconde."}, {"num": 115, "sym": "Mc", "nm": "Moscovium", "grp": 15, "per": 7, "cat": "postmetal", "emoji": "🏛️", "desc": "Nommé d'après Moscou. Un élément ultra-lourd fabriqué par l'humain."}, {"num": 116, "sym": "Lv", "nm": "Livermorium", "grp": 16, "per": 7, "cat": "postmetal", "emoji": "🧪", "desc": "Nommé d'après un laboratoire américain. Très instable."}, {"num": 117, "sym": "Ts", "nm": "Tennesse", "grp": 17, "per": 7, "cat": "halogen", "emoji": "🎸", "desc": "Nommé d'après l'État du Tennessee, aux États-Unis."}, {"num": 118, "sym": "Og", "nm": "Oganesson", "grp": 18, "per": 7, "cat": "noble", "emoji": "🆕", "desc": "Un des éléments les plus récents et les plus lourds. Nommé d'après un savant vivant."}], "cats": {"nonmetal": ["Non-métaux", "#6ee87a"], "noble": ["Gaz nobles", "#5ec8f2"], "alkali": ["Métaux alcalins", "#ff8f6b"], "alkaline": ["Alcalino-terreux", "#ffb454"], "transition": ["Métaux de transition", "#ffd23f"], "postmetal": ["Métaux pauvres", "#b9c44a"], "metalloid": ["Métalloïdes", "#7ee0c0"], "halogen": ["Halogènes", "#c98bff"], "lanthanide": ["Lanthanides", "#ff9ec7"], "actinide": ["Actinides", "#f06292"]}};
+const els = DATA.elements;
+const cats = DATA.cats;
+const byNum = {}; els.forEach(e=>byNum[e.num]=e);
+
+// ---- Construire la grille ----
+const table = document.getElementById('table');
+// Cases vides du tableau standard (groupe vide en haut)
+function blank(){const d=document.createElement('div');d.className='gap';return d;}
+
+// Placement principal : périodes 1-7, lanthanides/actinides retirés du bloc principal
+const mainEls = els.filter(e=>e.per<=7);
+// Map (per,grp) -> élément pour le bloc principal
+const grid = {};
+mainEls.forEach(e=>{ grid[e.per+'-'+e.grp]=e; });
+
+// La case 3 des périodes 6 et 7 contient le marqueur lanthanide/actinide (57-71, 89-103)
+// On les laisse comme placeholders cliquables vers le bloc du bas.
+
+function makeTile(e){
+  const b=document.createElement('button');
+  const color=cats[e.cat][1];
+  b.className='el'; b.style.background=color; b.dataset.num=e.num; b.dataset.cat=e.cat;
+  b.dataset.name=e.nm.toLowerCase(); b.dataset.sym=e.sym.toLowerCase();
+  b.innerHTML=`<span class="num">${e.num}</span><span class="em">${e.emoji}</span><span class="sym">${e.sym}</span><span class="nm">${e.nm}</span>`;
+  b.onclick=()=>openDetail(e.num);
+  return b;
+}
+function placeholderTile(label,color,targetNum){
+  const b=document.createElement('button');
+  b.className='el'; b.style.background=color; b.style.opacity='.85';
+  b.innerHTML=`<span class="em">⬇️</span><span class="sym" style="font-size:.7rem">${label}</span>`;
+  b.onclick=()=>openDetail(targetNum);
+  return b;
+}
+
+for(let per=1;per<=7;per++){
+  for(let grp=1;grp<=18;grp++){
+    const e=grid[per+'-'+grp];
+    if(e){ table.appendChild(makeTile(e)); }
+    else if(per===6 && grp===3){ table.appendChild(placeholderTile('57-71',cats['lanthanide'][1],57)); }
+    else if(per===7 && grp===3){ table.appendChild(placeholderTile('89-103',cats['actinide'][1],89)); }
+    else { table.appendChild(blank()); }
+  }
+}
+// Petite ligne d'espace
+const spacer=document.createElement('div'); spacer.className='fblock'; spacer.style.gridColumn='span 18'; table.appendChild(spacer);
+
+// Bloc lanthanides (57-71) et actinides (89-103), alignés sous la colonne 3
+function appendFRow(list,label){
+  const lab=document.createElement('div'); lab.className='frow-label'; lab.textContent=label; table.appendChild(lab);
+  list.forEach(e=>table.appendChild(makeTile(e)));
+  // remplir le reste de la ligne
+  const used=2+list.length;
+  for(let i=used;i<18;i++) table.appendChild(blank());
+}
+appendFRow(els.filter(e=>e.num>=57&&e.num<=71),'Lanthanides');
+appendFRow(els.filter(e=>e.num>=89&&e.num<=103),'Actinides');
+
+// ---- Filtre par catégorie ----
+let activeCat=null;
+document.querySelectorAll('.leg').forEach(btn=>{
+  btn.onclick=()=>{
+    const c=btn.dataset.cat;
+    if(activeCat===c){ activeCat=null; btn.classList.remove('active'); }
+    else{
+      activeCat=c;
+      document.querySelectorAll('.leg').forEach(b=>b.classList.toggle('active',b===btn));
+    }
+    applyFilters();
+  };
+});
+const search=document.getElementById('search');
+search.addEventListener('input',applyFilters);
+function applyFilters(){
+  const q=search.value.trim().toLowerCase();
+  document.querySelectorAll('.el[data-num]').forEach(t=>{
+    const okCat=!activeCat||t.dataset.cat===activeCat;
+    const okQ=!q||t.dataset.name.includes(q)||t.dataset.sym===q||t.dataset.sym.includes(q);
+    const show=okCat&&okQ;
+    t.classList.toggle('dim',!show);
+    t.classList.toggle('match',!!q&&okQ&&okCat&&q.length>0);
+  });
+}
+
+// ---- Détail + audio ----
+const overlay=document.getElementById('overlay');
+const dTile=document.getElementById('d-tile'), dEm=document.getElementById('d-em'),
+      dSym=document.getElementById('d-sym'), dName=document.getElementById('d-name'),
+      dMeta=document.getElementById('d-meta'), dCat=document.getElementById('d-cat'),
+      dDesc=document.getElementById('d-desc'), bListen=document.getElementById('b-listen');
+let currentNum=null;
+
+function openDetail(num){
+  const e=byNum[num]; if(!e) return;
+  currentNum=num;
+  const color=cats[e.cat][1];
+  dTile.style.background=color; dEm.textContent=e.emoji; dSym.textContent=e.sym;
+  dName.textContent=e.nm;
+  dMeta.textContent=`Numéro ${e.num}  ·  Symbole ${e.sym}`;
+  dCat.textContent=cats[e.cat][0]; dCat.style.background=color;
+  // mots cliquables pour le surlignage pendant la lecture
+  dDesc.innerHTML = e.desc.split(' ').map(w=>`<span class="read">${w}</span>`).join(' ');
+  overlay.classList.add('show');
+  if(document.getElementById('autoread').checked) speak(e);
+}
+function closeDetail(){ overlay.classList.remove('show'); stopSpeak(); }
+document.getElementById('b-close').onclick=closeDetail;
+overlay.onclick=ev=>{ if(ev.target===overlay) closeDetail(); };
+document.getElementById('b-prev').onclick=()=>{ let n=currentNum-1; if(n<1)n=118; openDetail(n); };
+document.getElementById('b-next').onclick=()=>{ let n=currentNum+1; if(n>118)n=1; openDetail(n); };
+document.addEventListener('keydown',e=>{
+  if(!overlay.classList.contains('show'))return;
+  if(e.key==='Escape')closeDetail();
+  if(e.key==='ArrowLeft')document.getElementById('b-prev').click();
+  if(e.key==='ArrowRight')document.getElementById('b-next').click();
+});
+
+// ---- Audio : MP3 préenregistrés (voix québécoise) + repli synthèse navigateur ----
+// Priorité 1 : un vrai fichier audio/<num>.mp3, qui joue partout, toujours la même voix.
+// Priorité 2 (si le MP3 manque) : la synthèse vocale du navigateur.
+const TTS = (typeof window !== 'undefined' && window.speechSynthesis) ? window.speechSynthesis : null;
+const canSpeak = !!(TTS && typeof window.SpeechSynthesisUtterance === 'function');
+let words=[];
+let audioEl=null; // lecteur HTML5 réutilisé
+
+function clearHighlight(){ document.querySelectorAll('.d-desc .read.on').forEach(s=>s.classList.remove('on')); }
+function stopSpeak(){
+  if(canSpeak){ try{ TTS.cancel(); }catch(_){} }
+  if(audioEl){ try{ audioEl.pause(); audioEl.currentTime=0; }catch(_){} }
+  bListen.classList.remove('playing');
+  clearHighlight();
+}
+
+// Surlignage progressif simple, calé sur la durée de l'audio
+let hlTimer=null;
+function runHighlight(durationMs){
+  clearInterval(hlTimer); clearHighlight();
+  words=Array.from(dDesc.querySelectorAll('.read'));
+  if(!words.length||!durationMs||!isFinite(durationMs)) return;
+  const step=durationMs/words.length;
+  let i=0;
+  hlTimer=setInterval(()=>{
+    clearHighlight();
+    if(i<words.length){ words[i].classList.add('on'); i++; }
+    else clearInterval(hlTimer);
+  }, step);
+}
+
+function speakBrowser(e){
+  if(!canSpeak){
+    bListen.textContent='🔇 Audio indisponible';
+    bListen.disabled=true; bListen.style.filter='grayscale(.5)';
+    setTimeout(()=>{ bListen.textContent='🔊 Écouter'; bListen.disabled=false; bListen.style.filter=''; }, 2000);
+    return;
+  }
+  words=Array.from(dDesc.querySelectorAll('.read'));
+  let u; try{ u=new SpeechSynthesisUtterance(e.nm+'. '+e.desc); }catch(_){ return; }
+  u.lang='fr-CA';
+  let v=[]; try{ v=TTS.getVoices()||[]; }catch(_){}
+  const fv=v.find(x=>/fr-CA/i.test(x.lang))||v.find(x=>/fr/i.test(x.lang));
+  if(fv)u.voice=fv;
+  u.rate=0.92;
+  let wi=-1;
+  u.onboundary=ev=>{
+    if(ev.name && ev.name!=='word') return;
+    if(wi>=0 && wi<words.length){ clearHighlight(); words[wi].classList.add('on'); }
+    wi++;
+  };
+  u.onstart=()=>bListen.classList.add('playing');
+  u.onend=()=>{ bListen.classList.remove('playing'); clearHighlight(); };
+  u.onerror=()=>{ bListen.classList.remove('playing'); clearHighlight(); };
+  try{ TTS.speak(u); }catch(_){ bListen.classList.remove('playing'); }
+}
+
+function speak(e){
+  stopSpeak();
+  // Tente d'abord le MP3 préenregistré
+  if(!audioEl){ audioEl=new Audio(); }
+  audioEl.src='audio/'+e.num+'.mp3';
+  bListen.classList.add('playing');
+  let usedFallback=false;
+  audioEl.onloadedmetadata=()=>{ runHighlight(audioEl.duration*1000); };
+  audioEl.onended=()=>{ bListen.classList.remove('playing'); clearInterval(hlTimer); clearHighlight(); };
+  audioEl.onerror=()=>{
+    // MP3 absent ou bloqué -> on bascule sur la synthèse du navigateur
+    if(usedFallback) return; usedFallback=true;
+    bListen.classList.remove('playing');
+    speakBrowser(e);
+  };
+  const p=audioEl.play();
+  if(p && p.catch){ p.catch(()=>{ if(!usedFallback){ usedFallback=true; bListen.classList.remove('playing'); speakBrowser(e); } }); }
+}
+
+bListen.onclick=()=>{ if(currentNum) speak(byNum[currentNum]); };
+document.getElementById('b-stop').onclick=stopSpeak;
+if(canSpeak && 'onvoiceschanged' in TTS){ try{ TTS.onvoiceschanged=()=>{}; }catch(_){} }
+</script>
+</body>
+</html>
