@@ -284,10 +284,14 @@ function openDetail(num){
   dCat.textContent=cats[e.cat][0]; dCat.style.background=color;
   // mots cliquables pour le surlignage pendant la lecture
   dDesc.innerHTML = e.desc.split(' ').map(w=>`<span class="read">${w}</span>`).join(' ');
+  if(!overlay.classList.contains('show')) history.pushState({modal:true},'');
   overlay.classList.add('show');
   if(document.getElementById('autoread').checked) speak(e);
 }
-function closeDetail(){ overlay.classList.remove('show'); stopSpeak(); }
+function reallyClose(){ overlay.classList.remove('show'); stopSpeak(); }
+// Le bouton Retour (surtout sur téléphone) ferme la fiche au lieu de quitter la page.
+function closeDetail(){ if(history.state&&history.state.modal) history.back(); else reallyClose(); }
+window.addEventListener('popstate',()=>{ if(overlay.classList.contains('show')) reallyClose(); });
 document.getElementById('b-close').onclick=closeDetail;
 overlay.onclick=ev=>{ if(ev.target===overlay) closeDetail(); };
 document.getElementById('b-prev').onclick=()=>{ let n=currentNum-1; if(n<1)n=118; openDetail(n); };

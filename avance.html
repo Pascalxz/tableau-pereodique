@@ -324,10 +324,14 @@ function openDetail(num){
     <div class="prop"><div class="k">Catégorie</div><div class="v" style="font-size:.92rem">${cats[e.cat][0]}</div></div>
     <div class="prop wide"><div class="k">Configuration</div><div class="v cfg">${e.config}</div></div>`;
   dDesc.innerHTML=e.desc.split(' ').map(w=>`<span class="read">${w}</span>`).join(' ');
+  if(!overlay.classList.contains('show')) history.pushState({modal:true},'');
   overlay.classList.add('show');
   if(document.getElementById('autoread').checked) speak(e);
 }
-function closeDetail(){ overlay.classList.remove('show'); stopSpeak(); }
+function reallyClose(){ overlay.classList.remove('show'); stopSpeak(); }
+// Le bouton Retour (surtout sur téléphone) ferme la fiche au lieu de quitter la page.
+function closeDetail(){ if(history.state&&history.state.modal) history.back(); else reallyClose(); }
+window.addEventListener('popstate',()=>{ if(overlay.classList.contains('show')) reallyClose(); });
 document.getElementById('b-close').onclick=closeDetail;
 overlay.onclick=ev=>{ if(ev.target===overlay) closeDetail(); };
 document.getElementById('b-prev').onclick=()=>{ let n=currentNum-1; if(n<1)n=118; openDetail(n); };
