@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau périodique — Avancé</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d1117; --bg2:#141b27; --ink:#f2f6ff; --soft:#9fb0c9;
+    --line:rgba(255,255,255,.09); --card:#1a2433;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:'Space Grotesk',sans-serif;
+    background:
+      radial-gradient(1200px 600px at 75% -10%, #1c2a44 0%, transparent 60%),
+      radial-gradient(900px 500px at 0% 100%, #1a2336 0%, transparent 55%),
+      var(--bg);
+    color:var(--ink); min-height:100vh; padding:24px 16px 70px;
+  }
+  header{max-width:1180px;margin:0 auto 6px;text-align:center}
+  .kicker{font-size:.8rem;letter-spacing:.32em;text-transform:uppercase;color:var(--soft);font-weight:600}
+  h1{
+    font-family:'Fraunces',serif;font-weight:700;line-height:1.04;
+    font-size:clamp(2.1rem,5.5vw,3.6rem);margin:6px 0 4px;
+    background:linear-gradient(95deg,#ffd23f,#6ee87a 45%,#5ec8f2);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .sub{color:var(--soft);font-size:1.02rem}
+  .versions{max-width:1180px;margin:16px auto 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .versions a{
+    text-decoration:none;font-family:inherit;font-size:.86rem;font-weight:600;
+    padding:9px 16px;border-radius:999px;border:1px solid var(--line);
+    background:rgba(255,255,255,.05);color:var(--soft);transition:.15s
+  }
+  .versions a:hover{color:var(--ink);border-color:rgba(255,255,255,.3)}
+  .versions a.on{background:linear-gradient(95deg,#ffd23f,#6ee87a);color:#0c1118;border-color:transparent}
+
+  .toolbar{max-width:1180px;margin:20px auto 18px;display:flex;flex-direction:column;gap:14px}
+  .search-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center}
+  .search{
+    flex:1;min-width:220px;max-width:420px;display:flex;align-items:center;gap:10px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 15px;
+  }
+  .search input{flex:1;background:none;border:none;outline:none;color:var(--ink);font-family:inherit;font-size:1rem}
+  .search input::placeholder{color:var(--soft)}
+  .toggle{
+    display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:11px 15px;color:var(--soft);font-size:.92rem;cursor:pointer;user-select:none
+  }
+  .toggle input{width:18px;height:18px;accent-color:#6ee87a}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .leg{
+    font-family:inherit;font-size:.82rem;padding:7px 13px;border-radius:999px;cursor:pointer;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--ink);
+    display:flex;align-items:center;gap:7px;transition:.15s;opacity:.65
+  }
+  .leg:hover{opacity:1}
+  .leg.active{opacity:1;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3)}
+  .dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+
+  .scroller{overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+  .table{
+    display:grid;grid-template-columns:repeat(18,minmax(46px,1fr));
+    gap:5px;max-width:1180px;margin:0 auto;min-width:880px
+  }
+  .gap{grid-column:span 1}
+  .fblock{height:14px}
+  .el{
+    position:relative;aspect-ratio:1;border:none;border-radius:9px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:#0c1118;font-family:'Space Grotesk',sans-serif;padding:2px;
+    transition:transform .12s,box-shadow .12s,opacity .2s;overflow:hidden
+  }
+  .el:hover{transform:translateY(-3px) scale(1.05);z-index:5;box-shadow:0 10px 22px rgba(0,0,0,.45)}
+  .el .num{position:absolute;top:3px;left:5px;font-size:.52rem;font-weight:600;opacity:.7}
+  .el .mass{position:absolute;top:3px;right:4px;font-size:.42rem;font-weight:600;opacity:.6}
+  .el .sym{font-size:1.2rem;font-weight:700;line-height:1;margin-top:2px}
+  .el .nm{font-size:.46rem;font-weight:600;opacity:.8;text-align:center;line-height:1.05;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+  .el.dim{opacity:.12;filter:grayscale(.6)}
+  .el.match{outline:3px solid #fff;outline-offset:1px}
+  .frow-label{
+    grid-column:span 2;display:flex;align-items:center;justify-content:flex-end;
+    padding-right:8px;color:var(--soft);font-size:.66rem;font-style:italic
+  }
+
+  /* Détail enrichi */
+  .overlay{position:fixed;inset:0;background:rgba(6,9,15,.8);backdrop-filter:blur(7px);
+    display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
+  .overlay.show{display:flex;animation:fade .2s}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .detail{
+    background:linear-gradient(180deg,var(--bg2),var(--card));
+    border-radius:26px;padding:28px 26px;max-width:560px;width:100%;max-height:92vh;overflow-y:auto;
+    border:1px solid var(--line);position:relative;animation:rise .28s
+  }
+  @keyframes rise{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .d-top{display:flex;align-items:center;gap:18px;margin-bottom:16px}
+  .d-tile{width:88px;height:88px;border-radius:18px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;color:#0c1118;flex-shrink:0}
+  .d-tile .em{font-size:1.7rem;line-height:1}
+  .d-tile .sym{font-size:1.7rem;font-weight:700;line-height:1}
+  .d-head h2{font-family:'Fraunces',serif;font-size:1.9rem;line-height:1.05}
+  .d-head .meta{color:var(--soft);font-size:.92rem;margin-top:4px}
+  .d-cat{display:inline-block;margin-top:8px;font-size:.78rem;padding:4px 11px;border-radius:999px;color:#0c1118;font-weight:600}
+
+  .props{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin:6px 0 14px}
+  .prop{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+  .prop .k{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--soft)}
+  .prop .v{font-size:1.02rem;font-weight:600;margin-top:2px}
+  .prop.wide{grid-column:span 2}
+  .prop .v.cfg{font-size:.82rem;font-weight:500;letter-spacing:.02em;word-spacing:2px}
+
+  .bohr-wrap{display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.03);
+    border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:14px}
+  .bohr-wrap svg{flex-shrink:0}
+  .bohr-info{font-size:.86rem;color:var(--soft);line-height:1.5}
+  .bohr-info b{color:var(--ink)}
+
+  .d-desc{font-size:1.06rem;line-height:1.55;color:var(--ink);margin:4px 0 4px}
+  .d-desc .read{border-radius:5px;padding:0 2px;transition:background .15s}
+  .d-desc .read.on{background:#ffd23f;color:#0c1118}
+  .btns{display:flex;gap:11px;margin-top:18px}
+  .btn{flex:1;border:none;border-radius:14px;padding:14px;font-size:1rem;font-family:inherit;
+    font-weight:600;cursor:pointer;transition:transform .1s,filter .15s}
+  .btn:active{transform:translateY(2px)}
+  .btn-listen{background:#6ee87a;color:#0c1118}
+  .btn-listen.playing{background:#ffd23f}
+  .btn-stop{background:rgba(255,255,255,.1);color:var(--ink);flex:0 0 56px}
+  .btn-close{background:rgba(255,255,255,.1);color:var(--ink);flex:0 0 56px}
+  .nav{display:flex;justify-content:space-between;margin-top:12px}
+  .nav button{background:none;border:1px solid var(--line);color:var(--soft);
+    border-radius:10px;padding:8px 14px;cursor:pointer;font-family:inherit;font-size:.9rem}
+  .nav button:hover{color:var(--ink);border-color:rgba(255,255,255,.3)}
+  .hint{text-align:center;color:var(--soft);font-size:.9rem;max-width:1180px;margin:18px auto 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">Version Avancée</div>
+  <h1>Le tableau périodique</h1>
+  <p class="sub">Toutes les propriétés de chaque élément : masse, électronégativité, points de fusion, configuration électronique et plus.</p>
+  <nav class="versions">
+    <a href="index.html">🌱 Base</a>
+    <a href="avance.html" class="on">🔬 Avancé</a>
+    <a href="pro.html">🚀 Pro</a>
+  </nav>
+</header>
+
+<div class="toolbar">
+  <div class="search-row">
+    <div class="search">
+      <span>🔍</span>
+      <input id="search" type="text" placeholder="Cherche : nom, symbole ou numéro (Fe, 26, oxygène...)" autocomplete="off">
+    </div>
+    <label class="toggle"><input type="checkbox" id="autoread" checked> Lire à voix haute en ouvrant</label>
+  </div>
+  <div class="legend" id="legend"></div>
+</div>
+
+<div class="scroller">
+  <div class="table" id="table"></div>
+</div>
+
+<p class="hint">💡 Clique un élément pour voir sa fiche complète et son modèle de Bohr. Les flèches ◀ ▶ ou du clavier passent d'un élément à l'autre.</p>
+
+<div class="overlay" id="overlay">
+  <div class="detail">
+    <div class="d-top">
+      <div class="d-tile" id="d-tile"><span class="em" id="d-em"></span><span class="sym" id="d-sym"></span></div>
+      <div class="d-head">
+        <h2 id="d-name"></h2>
+        <div class="meta" id="d-meta"></div>
+        <span class="d-cat" id="d-cat"></span>
+      </div>
+    </div>
+    <div class="bohr-wrap">
+      <div id="d-bohr"></div>
+      <div class="bohr-info" id="d-bohr-info"></div>
+    </div>
+    <div class="props" id="d-props"></div>
+    <p class="d-desc" id="d-desc"></p>
+    <div class="btns">
+      <button class="btn btn-listen" id="b-listen">🔊 Écouter</button>
+      <button class="btn btn-stop" id="b-stop" title="Arrêter">⏹</button>
+      <button class="btn btn-close" id="b-close" title="Fermer">✕</button>
+    </div>
+    <div class="nav">
+      <button id="b-prev">◀ Avant</button>
+      <button id="b-next">Après ▶</button>
+    </div>
+  </div>
+</div>
+
+<script src="elements.js"></script>
+<script>
+const els = PERIODIC.elements;
+const cats = PERIODIC.cats;
+const byNum = {}; els.forEach(e=>byNum[e.num]=e);
+
+// ---- Légende ----
+const legend=document.getElementById('legend');
+legend.innerHTML = Object.keys(cats).map(c=>
+  `<button class="leg" data-cat="${c}"><i class="dot" style="background:${cats[c][1]}"></i>${cats[c][0]}</button>`
+).join('');
+
+// ---- Grille ----
+const table=document.getElementById('table');
+function blank(){const d=document.createElement('div');d.className='gap';return d;}
+const mainEls=els.filter(e=>e.per<=7);
+const grid={}; mainEls.forEach(e=>{grid[e.per+'-'+e.grp]=e;});
+
+function fmtMass(m){ if(m==null)return''; return m>=100?Math.round(m):m.toFixed(m<10?2:1); }
+function makeTile(e){
+  const b=document.createElement('button');
+  const color=cats[e.cat][1];
+  b.className='el'; b.style.background=color; b.dataset.num=e.num; b.dataset.cat=e.cat;
+  b.dataset.name=e.nm.toLowerCase(); b.dataset.sym=e.sym.toLowerCase();
+  b.innerHTML=`<span class="num">${e.num}</span><span class="mass">${fmtMass(e.mass)}</span><span class="sym">${e.sym}</span><span class="nm">${e.nm}</span>`;
+  b.onclick=()=>openDetail(e.num);
+  return b;
+}
+function placeholderTile(label,color,targetNum){
+  const b=document.createElement('button');
+  b.className='el'; b.style.background=color; b.style.opacity='.85';
+  b.innerHTML=`<span class="sym" style="font-size:.7rem">${label}</span>`;
+  b.onclick=()=>openDetail(targetNum);
+  return b;
+}
+for(let per=1;per<=7;per++){
+  for(let grp=1;grp<=18;grp++){
+    const e=grid[per+'-'+grp];
+    if(e){ table.appendChild(makeTile(e)); }
+    else if(per===6 && grp===3){ table.appendChild(placeholderTile('57-71',cats['lanthanide'][1],57)); }
+    else if(per===7 && grp===3){ table.appendChild(placeholderTile('89-103',cats['actinide'][1],89)); }
+    else { table.appendChild(blank()); }
+  }
+}
+const spacer=document.createElement('div'); spacer.className='fblock'; spacer.style.gridColumn='span 18'; table.appendChild(spacer);
+function appendFRow(list,label){
+  const lab=document.createElement('div'); lab.className='frow-label'; lab.textContent=label; table.appendChild(lab);
+  list.forEach(e=>table.appendChild(makeTile(e)));
+  for(let i=2+list.length;i<18;i++) table.appendChild(blank());
+}
+appendFRow(els.filter(e=>e.num>=57&&e.num<=71),'Lanthanides');
+appendFRow(els.filter(e=>e.num>=89&&e.num<=103),'Actinides');
+
+// ---- Filtres ----
+let activeCat=null;
+document.querySelectorAll('.leg').forEach(btn=>{
+  btn.onclick=()=>{
+    const c=btn.dataset.cat;
+    if(activeCat===c){ activeCat=null; btn.classList.remove('active'); }
+    else{ activeCat=c; document.querySelectorAll('.leg').forEach(b=>b.classList.toggle('active',b===btn)); }
+    applyFilters();
+  };
+});
+const search=document.getElementById('search');
+search.addEventListener('input',applyFilters);
+function applyFilters(){
+  const q=search.value.trim().toLowerCase();
+  document.querySelectorAll('.el[data-num]').forEach(t=>{
+    const okCat=!activeCat||t.dataset.cat===activeCat;
+    const okQ=!q||t.dataset.name.includes(q)||t.dataset.sym===q||t.dataset.sym.includes(q)||t.dataset.num===q;
+    const show=okCat&&okQ;
+    t.classList.toggle('dim',!show);
+    t.classList.toggle('match',!!q&&show);
+  });
+}
+
+// ---- Modèle de Bohr (SVG) ----
+function bohrSVG(shells){
+  const size=132, c=size/2, max=Math.max(1,shells.length);
+  const rStep=(c-14)/max;
+  let circles='', dots='';
+  shells.forEach((count,i)=>{
+    const r=rStep*(i+1);
+    circles+=`<circle cx="${c}" cy="${c}" r="${r.toFixed(1)}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1"/>`;
+    for(let k=0;k<count;k++){
+      const a=(2*Math.PI*k/count)-Math.PI/2;
+      const x=c+r*Math.cos(a), y=c+r*Math.sin(a);
+      dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.6" fill="#ffd23f"/>`;
+    }
+  });
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    ${circles}${dots}
+    <circle cx="${c}" cy="${c}" r="9" fill="#5ec8f2"/>
+  </svg>`;
+}
+
+// ---- Détail ----
+const overlay=document.getElementById('overlay');
+const dTile=document.getElementById('d-tile'),dEm=document.getElementById('d-em'),
+      dSym=document.getElementById('d-sym'),dName=document.getElementById('d-name'),
+      dMeta=document.getElementById('d-meta'),dCat=document.getElementById('d-cat'),
+      dDesc=document.getElementById('d-desc'),dProps=document.getElementById('d-props'),
+      dBohr=document.getElementById('d-bohr'),dBohrInfo=document.getElementById('d-bohr-info'),
+      bListen=document.getElementById('b-listen');
+let currentNum=null;
+
+function val(x,unit){ return x==null?'<span style="color:var(--soft)">inconnu</span>':(x+(unit||'')); }
+function openDetail(num){
+  const e=byNum[num]; if(!e) return;
+  currentNum=num;
+  const color=cats[e.cat][1];
+  dTile.style.background=color; dEm.textContent=e.emoji; dSym.textContent=e.sym;
+  dName.textContent=e.nm;
+  dMeta.textContent=`Numéro atomique ${e.num} · Symbole ${e.sym} · Période ${e.per>7?(e.cat==='lanthanide'?6:7):e.per} · Groupe ${e.grp}`;
+  dCat.textContent=cats[e.cat][0]; dCat.style.background=color;
+  dBohr.innerHTML=bohrSVG(e.shells);
+  dBohrInfo.innerHTML=`<b>Configuration électronique</b><br>${e.shells.join(' · ')} électrons par couche`;
+  dProps.innerHTML=`
+    <div class="prop"><div class="k">Masse atomique</div><div class="v">${val(e.mass,' u')}</div></div>
+    <div class="prop"><div class="k">État (25°C)</div><div class="v">${e.state}</div></div>
+    <div class="prop"><div class="k">Électronégativité</div><div class="v">${val(e.en)}</div></div>
+    <div class="prop"><div class="k">Densité</div><div class="v">${val(e.density,' g/cm³')}</div></div>
+    <div class="prop"><div class="k">Point de fusion</div><div class="v">${val(e.melt,' °C')}</div></div>
+    <div class="prop"><div class="k">Point d'ébullition</div><div class="v">${val(e.boil,' °C')}</div></div>
+    <div class="prop"><div class="k">Découverte</div><div class="v">${val(e.year)}</div></div>
+    <div class="prop"><div class="k">Catégorie</div><div class="v" style="font-size:.92rem">${cats[e.cat][0]}</div></div>
+    <div class="prop wide"><div class="k">Configuration</div><div class="v cfg">${e.config}</div></div>`;
+  dDesc.innerHTML=e.desc.split(' ').map(w=>`<span class="read">${w}</span>`).join(' ');
+  overlay.classList.add('show');
+  if(document.getElementById('autoread').checked) speak(e);
+}
+function closeDetail(){ overlay.classList.remove('show'); stopSpeak(); }
+document.getElementById('b-close').onclick=closeDetail;
+overlay.onclick=ev=>{ if(ev.target===overlay) closeDetail(); };
+document.getElementById('b-prev').onclick=()=>{ let n=currentNum-1; if(n<1)n=118; openDetail(n); };
+document.getElementById('b-next').onclick=()=>{ let n=currentNum+1; if(n>118)n=1; openDetail(n); };
+document.addEventListener('keydown',e=>{
+  if(!overlay.classList.contains('show'))return;
+  if(e.key==='Escape')closeDetail();
+  if(e.key==='ArrowLeft')document.getElementById('b-prev').click();
+  if(e.key==='ArrowRight')document.getElementById('b-next').click();
+});
+
+// ---- Audio (MP3 préenregistré + repli synthèse) ----
+const TTS=(typeof window!=='undefined'&&window.speechSynthesis)?window.speechSynthesis:null;
+const canSpeak=!!(TTS&&typeof window.SpeechSynthesisUtterance==='function');
+let words=[],audioEl=null,hlTimer=null;
+function clearHighlight(){ document.querySelectorAll('.d-desc .read.on').forEach(s=>s.classList.remove('on')); }
+function stopSpeak(){
+  if(canSpeak){ try{TTS.cancel();}catch(_){} }
+  if(audioEl){ try{audioEl.pause();audioEl.currentTime=0;}catch(_){} }
+  clearInterval(hlTimer); bListen.classList.remove('playing'); clearHighlight();
+}
+function runHighlight(durationMs){
+  clearInterval(hlTimer); clearHighlight();
+  words=Array.from(dDesc.querySelectorAll('.read'));
+  if(!words.length||!durationMs||!isFinite(durationMs))return;
+  const step=durationMs/words.length; let i=0;
+  hlTimer=setInterval(()=>{ clearHighlight(); if(i<words.length){words[i].classList.add('on');i++;} else clearInterval(hlTimer); },step);
+}
+function speakBrowser(e){
+  if(!canSpeak){
+    bListen.textContent='🔇 Audio indisponible'; bListen.disabled=true; bListen.style.filter='grayscale(.5)';
+    setTimeout(()=>{bListen.textContent='🔊 Écouter';bListen.disabled=false;bListen.style.filter='';},2000); return;
+  }
+  words=Array.from(dDesc.querySelectorAll('.read'));
+  let u; try{u=new SpeechSynthesisUtterance(e.nm+'. '+e.desc);}catch(_){return;}
+  u.lang='fr-CA';
+  let v=[]; try{v=TTS.getVoices()||[];}catch(_){}
+  const fv=v.find(x=>/fr-CA/i.test(x.lang))||v.find(x=>/fr/i.test(x.lang)); if(fv)u.voice=fv;
+  u.rate=0.92; let wi=-1;
+  u.onboundary=ev=>{ if(ev.name&&ev.name!=='word')return; if(wi>=0&&wi<words.length){clearHighlight();words[wi].classList.add('on');} wi++; };
+  u.onstart=()=>bListen.classList.add('playing');
+  u.onend=()=>{bListen.classList.remove('playing');clearHighlight();};
+  u.onerror=()=>{bListen.classList.remove('playing');clearHighlight();};
+  try{TTS.speak(u);}catch(_){bListen.classList.remove('playing');}
+}
+function speak(e){
+  stopSpeak();
+  if(!audioEl){audioEl=new Audio();}
+  audioEl.src='audio/'+e.num+'.mp3'; bListen.classList.add('playing');
+  let usedFallback=false;
+  audioEl.onloadedmetadata=()=>{ runHighlight(audioEl.duration*1000); };
+  audioEl.onended=()=>{bListen.classList.remove('playing');clearInterval(hlTimer);clearHighlight();};
+  audioEl.onerror=()=>{ if(usedFallback)return; usedFallback=true; bListen.classList.remove('playing'); speakBrowser(e); };
+  const p=audioEl.play();
+  if(p&&p.catch){ p.catch(()=>{ if(!usedFallback){usedFallback=true;bListen.classList.remove('playing');speakBrowser(e);} }); }
+}
+bListen.onclick=()=>{ if(currentNum) speak(byNum[currentNum]); };
+document.getElementById('b-stop').onclick=stopSpeak;
+</script>
+</body>
+</html>

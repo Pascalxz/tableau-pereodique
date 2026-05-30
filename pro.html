@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau périodique — Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d1117; --bg2:#141b27; --ink:#f2f6ff; --soft:#9fb0c9;
+    --line:rgba(255,255,255,.09); --card:#1a2433;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:'Space Grotesk',sans-serif;
+    background:
+      radial-gradient(1200px 600px at 75% -10%, #1c2a44 0%, transparent 60%),
+      radial-gradient(900px 500px at 0% 100%, #1a2336 0%, transparent 55%),
+      var(--bg);
+    color:var(--ink); min-height:100vh; padding:24px 16px 70px;
+  }
+  header{max-width:1180px;margin:0 auto 6px;text-align:center}
+  .kicker{font-size:.8rem;letter-spacing:.32em;text-transform:uppercase;color:var(--soft);font-weight:600}
+  h1{
+    font-family:'Fraunces',serif;font-weight:700;line-height:1.04;
+    font-size:clamp(2.1rem,5.5vw,3.6rem);margin:6px 0 4px;
+    background:linear-gradient(95deg,#ffd23f,#6ee87a 45%,#5ec8f2);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .sub{color:var(--soft);font-size:1.02rem}
+  .versions{max-width:1180px;margin:16px auto 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .versions a{text-decoration:none;font-family:inherit;font-size:.86rem;font-weight:600;
+    padding:9px 16px;border-radius:999px;border:1px solid var(--line);
+    background:rgba(255,255,255,.05);color:var(--soft);transition:.15s}
+  .versions a:hover{color:var(--ink);border-color:rgba(255,255,255,.3)}
+  .versions a.on{background:linear-gradient(95deg,#ffd23f,#6ee87a);color:#0c1118;border-color:transparent}
+
+  /* Onglets de mode */
+  .modes{max-width:1180px;margin:22px auto 8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .mode-btn{font-family:inherit;font-size:.95rem;font-weight:600;padding:11px 20px;border-radius:14px;
+    border:1px solid var(--line);background:var(--card);color:var(--soft);cursor:pointer;transition:.15s}
+  .mode-btn:hover{color:var(--ink)}
+  .mode-btn.on{background:rgba(94,200,242,.16);border-color:rgba(94,200,242,.5);color:var(--ink)}
+
+  .panel{display:none}
+  .panel.on{display:block}
+
+  /* Barre d'outils */
+  .toolbar{max-width:1180px;margin:18px auto 14px;display:flex;flex-direction:column;gap:14px}
+  .search-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center}
+  .search{flex:1;min-width:200px;max-width:360px;display:flex;align-items:center;gap:10px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 15px}
+  .search input{flex:1;background:none;border:none;outline:none;color:var(--ink);font-family:inherit;font-size:1rem}
+  .search input::placeholder{color:var(--soft)}
+  .field{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:9px 14px;color:var(--soft);font-size:.9rem}
+  .field select{background:none;border:none;outline:none;color:var(--ink);font-family:inherit;font-size:.95rem;cursor:pointer}
+  .field select option{background:var(--bg2)}
+
+  .scale{max-width:1180px;margin:0 auto 8px;display:flex;align-items:center;gap:12px;justify-content:center;
+    flex-wrap:wrap;color:var(--soft);font-size:.82rem}
+  .scale .bar{width:220px;height:12px;border-radius:6px;
+    background:linear-gradient(90deg,#5ec8f2,#6ee87a,#ffd23f,#ff6b6b)}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:1180px;margin:0 auto}
+  .leg{font-family:inherit;font-size:.8rem;padding:6px 12px;border-radius:999px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--ink);
+    display:flex;align-items:center;gap:7px}
+  .dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+
+  .scroller{overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+  .table{display:grid;grid-template-columns:repeat(18,minmax(46px,1fr));
+    gap:5px;max-width:1180px;margin:0 auto;min-width:880px}
+  .gap{grid-column:span 1}
+  .fblock{height:14px}
+  .el{position:relative;aspect-ratio:1;border:none;border-radius:9px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:#0c1118;font-family:'Space Grotesk',sans-serif;padding:2px;
+    transition:transform .12s,box-shadow .12s,opacity .2s;overflow:hidden}
+  .el:hover{transform:translateY(-3px) scale(1.05);z-index:5;box-shadow:0 10px 22px rgba(0,0,0,.45)}
+  .el .num{position:absolute;top:3px;left:5px;font-size:.52rem;font-weight:600;opacity:.7}
+  .el .pval{position:absolute;bottom:2px;right:4px;font-size:.42rem;font-weight:700;opacity:.75}
+  .el .sym{font-size:1.2rem;font-weight:700;line-height:1;margin-top:2px}
+  .el .nm{font-size:.46rem;font-weight:600;opacity:.8;text-align:center;line-height:1.05;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+  .el.dim{opacity:.12;filter:grayscale(.6)}
+  .el.match{outline:3px solid #fff;outline-offset:1px}
+  .el.picked{outline:3px solid #5ec8f2;outline-offset:1px}
+  .frow-label{grid-column:span 2;display:flex;align-items:center;justify-content:flex-end;
+    padding-right:8px;color:var(--soft);font-size:.66rem;font-style:italic}
+  .hint{text-align:center;color:var(--soft);font-size:.9rem;max-width:1180px;margin:16px auto 0}
+
+  /* Comparaison */
+  .cmp-intro{max-width:900px;margin:6px auto 14px;text-align:center;color:var(--soft)}
+  .cmp-tray{max-width:1180px;margin:0 auto 14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;min-height:10px}
+  .chip{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
+    border-radius:999px;padding:7px 8px 7px 14px;font-weight:600}
+  .chip .x{background:rgba(255,255,255,.12);border:none;color:var(--ink);width:24px;height:24px;
+    border-radius:50%;cursor:pointer;font-size:.9rem;line-height:1}
+  .cmp-grid{max-width:1000px;margin:8px auto 0;overflow-x:auto}
+  .cmp-table{width:100%;border-collapse:collapse;min-width:520px}
+  .cmp-table th,.cmp-table td{padding:11px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:.92rem;vertical-align:top}
+  .cmp-table th{color:var(--soft);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em}
+  .cmp-el-head{display:flex;align-items:center;gap:8px}
+  .cmp-el-head .b{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    color:#0c1118;font-weight:700;font-size:.95rem}
+  .minibar{height:7px;border-radius:4px;background:#5ec8f2;margin-top:5px}
+  .cmp-val{font-weight:600}
+
+  /* Quiz */
+  .quiz{max-width:620px;margin:6px auto 0;background:linear-gradient(180deg,var(--bg2),var(--card));
+    border:1px solid var(--line);border-radius:22px;padding:26px 24px}
+  .quiz-setup{display:flex;flex-direction:column;gap:14px}
+  .quiz-setup .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .quiz h3{font-family:'Fraunces',serif;font-size:1.5rem;text-align:center;margin-bottom:4px}
+  .quiz .lead{text-align:center;color:var(--soft);margin-bottom:6px}
+  .qstat{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;
+    color:var(--soft);font-size:.92rem}
+  .qstat b{color:var(--ink);font-size:1.15rem}
+  .qprompt{text-align:center;margin:6px 0 20px}
+  .qprompt .big{font-family:'Fraunces',serif;font-size:3.4rem;line-height:1;margin:8px 0;
+    display:inline-flex;width:96px;height:96px;align-items:center;justify-content:center;
+    border-radius:18px;color:#0c1118;font-weight:700}
+  .qprompt .q{font-size:1.18rem;font-weight:600;line-height:1.4}
+  .qprompt .hintline{color:var(--soft);font-size:1.02rem;line-height:1.5;margin-top:8px}
+  .qopts{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+  .qopt{font-family:inherit;font-size:1.05rem;font-weight:600;padding:16px 12px;border-radius:14px;
+    border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--ink);cursor:pointer;transition:.12s}
+  .qopt:hover{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.08)}
+  .qopt.good{background:#6ee87a;color:#0c1118;border-color:transparent}
+  .qopt.bad{background:#ff6b6b;color:#0c1118;border-color:transparent}
+  .qopt:disabled{cursor:default}
+  .qnext{margin-top:16px;width:100%;border:none;border-radius:14px;padding:15px;font-family:inherit;
+    font-size:1.05rem;font-weight:600;background:#5ec8f2;color:#0c1118;cursor:pointer}
+  .qfeedback{text-align:center;margin-top:14px;font-weight:600;min-height:24px}
+  .btn-primary{font-family:inherit;font-size:1.05rem;font-weight:600;padding:15px 22px;border-radius:14px;
+    border:none;background:linear-gradient(95deg,#ffd23f,#6ee87a);color:#0c1118;cursor:pointer}
+
+  /* Détail */
+  .overlay{position:fixed;inset:0;background:rgba(6,9,15,.8);backdrop-filter:blur(7px);
+    display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
+  .overlay.show{display:flex;animation:fade .2s}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .detail{background:linear-gradient(180deg,var(--bg2),var(--card));border-radius:26px;padding:28px 26px;
+    max-width:560px;width:100%;max-height:92vh;overflow-y:auto;border:1px solid var(--line);position:relative;animation:rise .28s}
+  @keyframes rise{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .d-top{display:flex;align-items:center;gap:18px;margin-bottom:16px}
+  .d-tile{width:88px;height:88px;border-radius:18px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;color:#0c1118;flex-shrink:0}
+  .d-tile .em{font-size:1.7rem;line-height:1}
+  .d-tile .sym{font-size:1.7rem;font-weight:700;line-height:1}
+  .d-head h2{font-family:'Fraunces',serif;font-size:1.9rem;line-height:1.05}
+  .d-head .meta{color:var(--soft);font-size:.92rem;margin-top:4px}
+  .d-cat{display:inline-block;margin-top:8px;font-size:.78rem;padding:4px 11px;border-radius:999px;color:#0c1118;font-weight:600}
+  .props{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin:6px 0 14px}
+  .prop{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+  .prop .k{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--soft)}
+  .prop .v{font-size:1.02rem;font-weight:600;margin-top:2px}
+  .prop.wide{grid-column:span 2}
+  .prop .v.cfg{font-size:.82rem;font-weight:500;word-spacing:2px}
+  .bohr-wrap{display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.03);
+    border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:14px}
+  .bohr-info{font-size:.86rem;color:var(--soft);line-height:1.5}
+  .bohr-info b{color:var(--ink)}
+  .d-desc{font-size:1.06rem;line-height:1.55;color:var(--ink);margin:4px 0 4px}
+  .d-desc .read{border-radius:5px;padding:0 2px;transition:background .15s}
+  .d-desc .read.on{background:#ffd23f;color:#0c1118}
+  .btns{display:flex;gap:11px;margin-top:18px}
+  .btn{flex:1;border:none;border-radius:14px;padding:14px;font-size:1rem;font-family:inherit;font-weight:600;cursor:pointer;transition:transform .1s,filter .15s}
+  .btn:active{transform:translateY(2px)}
+  .btn-listen{background:#6ee87a;color:#0c1118}
+  .btn-listen.playing{background:#ffd23f}
+  .btn-stop{background:rgba(255,255,255,.1);color:var(--ink);flex:0 0 56px}
+  .btn-close{background:rgba(255,255,255,.1);color:var(--ink);flex:0 0 56px}
+  .nav{display:flex;justify-content:space-between;margin-top:12px}
+  .nav button{background:none;border:1px solid var(--line);color:var(--soft);border-radius:10px;
+    padding:8px 14px;cursor:pointer;font-family:inherit;font-size:.9rem}
+  .nav button:hover{color:var(--ink);border-color:rgba(255,255,255,.3)}
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">Version Pro</div>
+  <h1>Le tableau périodique</h1>
+  <p class="sub">Explore, colore par propriété, compare des éléments et teste-toi avec le mode quiz.</p>
+  <nav class="versions">
+    <a href="index.html">🌱 Base</a>
+    <a href="avance.html">🔬 Avancé</a>
+    <a href="pro.html" class="on">🚀 Pro</a>
+  </nav>
+</header>
+
+<div class="modes">
+  <button class="mode-btn on" data-mode="explore">🧭 Explorer</button>
+  <button class="mode-btn" data-mode="compare">⚖️ Comparer</button>
+  <button class="mode-btn" data-mode="quiz">🎮 Quiz</button>
+</div>
+
+<!-- EXPLORER -->
+<section class="panel on" id="p-explore">
+  <div class="toolbar">
+    <div class="search-row">
+      <div class="search"><span>🔍</span>
+        <input id="search" type="text" placeholder="Nom, symbole ou numéro..." autocomplete="off"></div>
+      <div class="field">🎨 Colorer par
+        <select id="colorby">
+          <option value="cat">Catégorie</option>
+          <option value="state">État (solide/liquide/gaz)</option>
+          <option value="en">Électronégativité</option>
+          <option value="mass">Masse atomique</option>
+          <option value="melt">Point de fusion</option>
+          <option value="density">Densité</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="scale" id="scale" style="display:none">
+    <span id="scale-min"></span><div class="bar"></div><span id="scale-max"></span>
+    <span style="margin-left:8px">⬜ inconnu</span>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="scroller"><div class="table" id="table"></div></div>
+  <p class="hint">💡 Change « Colorer par » pour voir les tendances du tableau. Clique un élément pour sa fiche complète.</p>
+</section>
+
+<!-- COMPARER -->
+<section class="panel" id="p-compare">
+  <p class="cmp-intro">Choisis jusqu'à 3 éléments dans le tableau pour les comparer côte à côte.</p>
+  <div class="cmp-tray" id="cmp-tray"></div>
+  <div class="scroller"><div class="table" id="table2"></div></div>
+  <div class="cmp-grid" id="cmp-grid"></div>
+</section>
+
+<!-- QUIZ -->
+<section class="panel" id="p-quiz">
+  <div class="quiz" id="quiz">
+    <div class="quiz-setup" id="quiz-setup">
+      <h3>🎮 Mode quiz</h3>
+      <p class="lead">Choisis ton défi, puis enchaîne les bonnes réponses !</p>
+      <div class="row">
+        <div class="field">Jeu
+          <select id="q-type">
+            <option value="mix">🎲 Mélange</option>
+            <option value="sym2nm">Symbole → nom</option>
+            <option value="nm2sym">Nom → symbole</option>
+            <option value="indice">Devine par l'indice</option>
+            <option value="num">Numéro atomique</option>
+            <option value="cat">Famille de l'élément</option>
+          </select>
+        </div>
+        <div class="field">Difficulté
+          <select id="q-diff">
+            <option value="36">Facile (1–36)</option>
+            <option value="86">Moyen (1–86)</option>
+            <option value="118">Tout (1–118)</option>
+          </select>
+        </div>
+      </div>
+      <p class="lead" id="q-best"></p>
+      <div style="text-align:center"><button class="btn-primary" id="q-start">Commencer ▶</button></div>
+    </div>
+
+    <div id="quiz-play" style="display:none">
+      <div class="qstat">
+        <span>Score : <b id="q-score">0</b></span>
+        <span>Série : <b id="q-streak">0</b> 🔥</span>
+        <span>Record : <b id="q-record">0</b></span>
+      </div>
+      <div class="qprompt" id="q-prompt"></div>
+      <div class="qopts" id="q-opts"></div>
+      <div class="qfeedback" id="q-feedback"></div>
+      <button class="qnext" id="q-next" style="display:none">Question suivante ▶</button>
+      <div style="text-align:center;margin-top:14px">
+        <button class="mode-btn" id="q-quit">Arrêter</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Détail -->
+<div class="overlay" id="overlay">
+  <div class="detail">
+    <div class="d-top">
+      <div class="d-tile" id="d-tile"><span class="em" id="d-em"></span><span class="sym" id="d-sym"></span></div>
+      <div class="d-head"><h2 id="d-name"></h2><div class="meta" id="d-meta"></div><span class="d-cat" id="d-cat"></span></div>
+    </div>
+    <div class="bohr-wrap"><div id="d-bohr"></div><div class="bohr-info" id="d-bohr-info"></div></div>
+    <div class="props" id="d-props"></div>
+    <p class="d-desc" id="d-desc"></p>
+    <div class="btns">
+      <button class="btn btn-listen" id="b-listen">🔊 Écouter</button>
+      <button class="btn btn-stop" id="b-stop" title="Arrêter">⏹</button>
+      <button class="btn btn-close" id="b-close" title="Fermer">✕</button>
+    </div>
+    <div class="nav"><button id="b-prev">◀ Avant</button><button id="b-next">Après ▶</button></div>
+  </div>
+</div>
+
+<script src="elements.js"></script>
+<script>
+const els=PERIODIC.elements, cats=PERIODIC.cats;
+const byNum={}; els.forEach(e=>byNum[e.num]=e);
+const PROP_LABEL={en:'Électronégativité',mass:'Masse atomique (u)',melt:'Fusion (°C)',density:'Densité (g/cm³)'};
+
+// ===== Couleurs =====
+function hex2rgb(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+function lerp(a,b,t){return Math.round(a+(b-a)*t);}
+function scaleColor(t){ // bleu -> vert -> jaune -> rouge
+  const stops=[[0,'#5ec8f2'],[0.4,'#6ee87a'],[0.72,'#ffd23f'],[1,'#ff6b6b']];
+  for(let i=0;i<stops.length-1;i++){
+    const [p0,c0]=stops[i],[p1,c1]=stops[i+1];
+    if(t<=p1){ const lt=(t-p0)/(p1-p0||1); const a=hex2rgb(c0),b=hex2rgb(c1);
+      return `rgb(${lerp(a[0],b[0],lt)},${lerp(a[1],b[1],lt)},${lerp(a[2],b[2],lt)})`; }
+  }
+  return stops[stops.length-1][1];
+}
+const STATE_COLOR={solide:'#b9c44a',liquide:'#5ec8f2',gaz:'#c98bff',inconnu:'#566'};
+
+let colorMode='cat', range={min:0,max:1};
+function computeRange(prop){
+  const vals=els.map(e=>e[prop]).filter(v=>v!=null);
+  range={min:Math.min(...vals),max:Math.max(...vals)};
+}
+function tileColor(e){
+  if(colorMode==='cat') return cats[e.cat][1];
+  if(colorMode==='state') return STATE_COLOR[e.state]||'#566';
+  const v=e[colorMode];
+  if(v==null) return '#3a4456';
+  const t=(v-range.min)/((range.max-range.min)||1);
+  return scaleColor(t);
+}
+function tileValueLabel(e){
+  if(colorMode==='cat'||colorMode==='state') return '';
+  const v=e[colorMode]; if(v==null) return '';
+  if(colorMode==='mass') return v>=100?Math.round(v):v.toFixed(0);
+  return v;
+}
+
+// ===== Construire une grille =====
+function buildTable(container,onClick){
+  container.innerHTML='';
+  const blank=()=>{const d=document.createElement('div');d.className='gap';return d;};
+  const mainEls=els.filter(e=>e.per<=7);
+  const grid={}; mainEls.forEach(e=>{grid[e.per+'-'+e.grp]=e;});
+  function tile(e){
+    const b=document.createElement('button');
+    b.className='el'; b.dataset.num=e.num; b.dataset.cat=e.cat;
+    b.dataset.name=e.nm.toLowerCase(); b.dataset.sym=e.sym.toLowerCase();
+    b.innerHTML=`<span class="num">${e.num}</span><span class="pval"></span><span class="sym">${e.sym}</span><span class="nm">${e.nm}</span>`;
+    b.onclick=()=>onClick(e.num);
+    return b;
+  }
+  function ph(label,color,target){
+    const b=document.createElement('button'); b.className='el';
+    b.style.background=color; b.style.opacity='.85';
+    b.innerHTML=`<span class="sym" style="font-size:.7rem">${label}</span>`;
+    b.onclick=()=>onClick(target); return b;
+  }
+  for(let per=1;per<=7;per++) for(let grp=1;grp<=18;grp++){
+    const e=grid[per+'-'+grp];
+    if(e) container.appendChild(tile(e));
+    else if(per===6&&grp===3) container.appendChild(ph('57-71',cats['lanthanide'][1],57));
+    else if(per===7&&grp===3) container.appendChild(ph('89-103',cats['actinide'][1],89));
+    else container.appendChild(blank());
+  }
+  const sp=document.createElement('div'); sp.className='fblock'; sp.style.gridColumn='span 18'; container.appendChild(sp);
+  function frow(list,label){
+    const l=document.createElement('div'); l.className='frow-label'; l.textContent=label; container.appendChild(l);
+    list.forEach(e=>container.appendChild(tile(e)));
+    for(let i=2+list.length;i<18;i++) container.appendChild(blank());
+  }
+  frow(els.filter(e=>e.num>=57&&e.num<=71),'Lanthanides');
+  frow(els.filter(e=>e.num>=89&&e.num<=103),'Actinides');
+}
+
+function paint(container){
+  container.querySelectorAll('.el[data-num]').forEach(t=>{
+    const e=byNum[+t.dataset.num];
+    t.style.background=tileColor(e);
+    const pv=t.querySelector('.pval'); if(pv) pv.textContent=tileValueLabel(e);
+  });
+}
+
+// Tables : explorer (ouvre détail) + comparer (sélectionne)
+buildTable(document.getElementById('table'),openDetail);
+buildTable(document.getElementById('table2'),toggleCompare);
+const tableEx=document.getElementById('table');
+const tableCmp=document.getElementById('table2');
+paint(tableEx); paint(tableCmp);
+
+// ===== Légende / échelle =====
+const legend=document.getElementById('legend'),scale=document.getElementById('scale');
+function refreshLegendScale(){
+  if(colorMode==='cat'){
+    scale.style.display='none';
+    legend.style.display='flex';
+    legend.innerHTML=Object.keys(cats).map(c=>`<span class="leg"><i class="dot" style="background:${cats[c][1]}"></i>${cats[c][0]}</span>`).join('');
+  } else if(colorMode==='state'){
+    scale.style.display='none'; legend.style.display='flex';
+    legend.innerHTML=['solide','liquide','gaz','inconnu'].map(s=>`<span class="leg"><i class="dot" style="background:${STATE_COLOR[s]}"></i>${s}</span>`).join('');
+  } else {
+    legend.style.display='none'; scale.style.display='flex';
+    computeRange(colorMode);
+    document.getElementById('scale-min').textContent=PROP_LABEL[colorMode]+' : '+ (Math.round(range.min*100)/100);
+    document.getElementById('scale-max').textContent=Math.round(range.max*100)/100;
+  }
+}
+document.getElementById('colorby').onchange=e=>{
+  colorMode=e.target.value;
+  if(colorMode!=='cat'&&colorMode!=='state') computeRange(colorMode);
+  refreshLegendScale(); paint(tableEx); paint(tableCmp); applyFilters();
+};
+refreshLegendScale();
+
+// ===== Recherche (explorer) =====
+const search=document.getElementById('search');
+search.addEventListener('input',applyFilters);
+function applyFilters(){
+  const q=search.value.trim().toLowerCase();
+  tableEx.querySelectorAll('.el[data-num]').forEach(t=>{
+    const okQ=!q||t.dataset.name.includes(q)||t.dataset.sym===q||t.dataset.sym.includes(q)||t.dataset.num===q;
+    t.classList.toggle('dim',!okQ);
+    t.classList.toggle('match',!!q&&okQ);
+  });
+}
+
+// ===== Modes =====
+document.querySelectorAll('.mode-btn[data-mode]').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('.mode-btn[data-mode]').forEach(x=>x.classList.toggle('on',x===b));
+    const m=b.dataset.mode;
+    document.getElementById('p-explore').classList.toggle('on',m==='explore');
+    document.getElementById('p-compare').classList.toggle('on',m==='compare');
+    document.getElementById('p-quiz').classList.toggle('on',m==='quiz');
+  };
+});
+
+// ===== Comparaison =====
+let picked=[];
+function toggleCompare(num){
+  const i=picked.indexOf(num);
+  if(i>=0) picked.splice(i,1);
+  else { if(picked.length>=3){ picked.shift(); } picked.push(num); }
+  renderCompare();
+}
+function renderCompare(){
+  tableCmp.querySelectorAll('.el[data-num]').forEach(t=>t.classList.toggle('picked',picked.includes(+t.dataset.num)));
+  const tray=document.getElementById('cmp-tray');
+  tray.innerHTML=picked.map(n=>{const e=byNum[n];
+    return `<span class="chip"><i class="dot" style="background:${cats[e.cat][1]}"></i>${e.nm} (${e.sym}) <button class="x" data-n="${n}">✕</button></span>`;}).join('');
+  tray.querySelectorAll('.x').forEach(b=>b.onclick=()=>toggleCompare(+b.dataset.n));
+  const grid=document.getElementById('cmp-grid');
+  if(picked.length<2){ grid.innerHTML='<p class="cmp-intro">Sélectionne au moins 2 éléments.</p>'; return; }
+  const rows=[
+    ['Symbole',e=>e.sym,null],['Numéro atomique',e=>e.num,'num'],
+    ['Masse atomique',e=>fmt(e.mass,' u'),'mass'],['Électronégativité',e=>fmt(e.en),'en'],
+    ['Point de fusion',e=>fmt(e.melt,' °C'),'melt'],['Point d\'ébullition',e=>fmt(e.boil,' °C'),'boil'],
+    ['Densité',e=>fmt(e.density,' g/cm³'),'density'],['État (25°C)',e=>e.state,null],
+    ['Découverte',e=>e.year,null],['Famille',e=>cats[e.cat][0],null],['Configuration',e=>e.config,null],
+  ];
+  const sel=picked.map(n=>byNum[n]);
+  let html='<table class="cmp-table"><thead><tr><th></th>';
+  sel.forEach(e=>{ html+=`<th><div class="cmp-el-head"><span class="b" style="background:${cats[e.cat][1]}">${e.sym}</span>${e.nm}</div></th>`; });
+  html+='</tr></thead><tbody>';
+  rows.forEach(([label,fn,barProp])=>{
+    html+=`<tr><th>${label}</th>`;
+    let max=null;
+    if(barProp){ const vs=sel.map(e=>e[barProp]).filter(v=>v!=null); if(vs.length) max=Math.max(...vs.map(Math.abs)); }
+    sel.forEach(e=>{
+      html+='<td><span class="cmp-val">'+fn(e)+'</span>';
+      if(barProp&&e[barProp]!=null&&max){ const w=Math.max(4,Math.abs(e[barProp])/max*100);
+        html+=`<div class="minibar" style="width:${w}%;background:${cats[e.cat][1]}"></div>`; }
+      html+='</td>';
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  grid.innerHTML=html;
+}
+function fmt(v,u){ return v==null?'—':(v+(u||'')); }
+renderCompare();
+
+// ===== Modèle de Bohr =====
+function bohrSVG(shells){
+  const size=132,c=size/2,max=Math.max(1,shells.length),rStep=(c-14)/max;
+  let circles='',dots='';
+  shells.forEach((count,i)=>{
+    const r=rStep*(i+1);
+    circles+=`<circle cx="${c}" cy="${c}" r="${r.toFixed(1)}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1"/>`;
+    for(let k=0;k<count;k++){ const a=(2*Math.PI*k/count)-Math.PI/2;
+      dots+=`<circle cx="${(c+r*Math.cos(a)).toFixed(1)}" cy="${(c+r*Math.sin(a)).toFixed(1)}" r="2.6" fill="#ffd23f"/>`; }
+  });
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${circles}${dots}<circle cx="${c}" cy="${c}" r="9" fill="#5ec8f2"/></svg>`;
+}
+
+// ===== Détail =====
+const overlay=document.getElementById('overlay');
+const dTile=document.getElementById('d-tile'),dEm=document.getElementById('d-em'),dSym=document.getElementById('d-sym'),
+  dName=document.getElementById('d-name'),dMeta=document.getElementById('d-meta'),dCat=document.getElementById('d-cat'),
+  dDesc=document.getElementById('d-desc'),dProps=document.getElementById('d-props'),dBohr=document.getElementById('d-bohr'),
+  dBohrInfo=document.getElementById('d-bohr-info'),bListen=document.getElementById('b-listen');
+let currentNum=null;
+function val(x,u){ return x==null?'<span style="color:var(--soft)">inconnu</span>':(x+(u||'')); }
+function openDetail(num){
+  const e=byNum[num]; if(!e)return; currentNum=num;
+  const color=cats[e.cat][1];
+  dTile.style.background=color; dEm.textContent=e.emoji; dSym.textContent=e.sym;
+  dName.textContent=e.nm;
+  dMeta.textContent=`Numéro atomique ${e.num} · Symbole ${e.sym} · Groupe ${e.grp}`;
+  dCat.textContent=cats[e.cat][0]; dCat.style.background=color;
+  dBohr.innerHTML=bohrSVG(e.shells);
+  dBohrInfo.innerHTML=`<b>Couches électroniques</b><br>${e.shells.join(' · ')} électrons`;
+  dProps.innerHTML=`
+    <div class="prop"><div class="k">Masse atomique</div><div class="v">${val(e.mass,' u')}</div></div>
+    <div class="prop"><div class="k">État (25°C)</div><div class="v">${e.state}</div></div>
+    <div class="prop"><div class="k">Électronégativité</div><div class="v">${val(e.en)}</div></div>
+    <div class="prop"><div class="k">Densité</div><div class="v">${val(e.density,' g/cm³')}</div></div>
+    <div class="prop"><div class="k">Point de fusion</div><div class="v">${val(e.melt,' °C')}</div></div>
+    <div class="prop"><div class="k">Point d'ébullition</div><div class="v">${val(e.boil,' °C')}</div></div>
+    <div class="prop"><div class="k">Découverte</div><div class="v">${val(e.year)}</div></div>
+    <div class="prop"><div class="k">Famille</div><div class="v" style="font-size:.92rem">${cats[e.cat][0]}</div></div>
+    <div class="prop wide"><div class="k">Configuration</div><div class="v cfg">${e.config}</div></div>`;
+  dDesc.innerHTML=e.desc.split(' ').map(w=>`<span class="read">${w}</span>`).join(' ');
+  overlay.classList.add('show');
+  // En mode Pro, l'audio ne se lance pas tout seul : on clique sur « Écouter ».
+}
+function closeDetail(){ overlay.classList.remove('show'); stopSpeak(); }
+document.getElementById('b-close').onclick=closeDetail;
+overlay.onclick=ev=>{ if(ev.target===overlay) closeDetail(); };
+document.getElementById('b-prev').onclick=()=>{ let n=currentNum-1; if(n<1)n=118; openDetail(n); };
+document.getElementById('b-next').onclick=()=>{ let n=currentNum+1; if(n>118)n=1; openDetail(n); };
+document.addEventListener('keydown',e=>{
+  if(!overlay.classList.contains('show'))return;
+  if(e.key==='Escape')closeDetail();
+  if(e.key==='ArrowLeft')document.getElementById('b-prev').click();
+  if(e.key==='ArrowRight')document.getElementById('b-next').click();
+});
+
+// ===== Audio =====
+const TTS=(typeof window!=='undefined'&&window.speechSynthesis)?window.speechSynthesis:null;
+const canSpeak=!!(TTS&&typeof window.SpeechSynthesisUtterance==='function');
+let words=[],audioEl=null,hlTimer=null;
+function clearHighlight(){ document.querySelectorAll('.d-desc .read.on').forEach(s=>s.classList.remove('on')); }
+function stopSpeak(){ if(canSpeak){try{TTS.cancel();}catch(_){}} if(audioEl){try{audioEl.pause();audioEl.currentTime=0;}catch(_){}}
+  clearInterval(hlTimer); bListen.classList.remove('playing'); clearHighlight(); }
+function runHighlight(d){ clearInterval(hlTimer); clearHighlight(); words=Array.from(dDesc.querySelectorAll('.read'));
+  if(!words.length||!d||!isFinite(d))return; const step=d/words.length; let i=0;
+  hlTimer=setInterval(()=>{clearHighlight(); if(i<words.length){words[i].classList.add('on');i++;} else clearInterval(hlTimer);},step); }
+function speakBrowser(e){
+  if(!canSpeak){ bListen.textContent='🔇 Audio indisponible'; bListen.disabled=true;
+    setTimeout(()=>{bListen.textContent='🔊 Écouter';bListen.disabled=false;},2000); return; }
+  words=Array.from(dDesc.querySelectorAll('.read'));
+  let u; try{u=new SpeechSynthesisUtterance(e.nm+'. '+e.desc);}catch(_){return;}
+  u.lang='fr-CA'; let v=[]; try{v=TTS.getVoices()||[];}catch(_){}
+  const fv=v.find(x=>/fr-CA/i.test(x.lang))||v.find(x=>/fr/i.test(x.lang)); if(fv)u.voice=fv;
+  u.rate=0.92; let wi=-1;
+  u.onboundary=ev=>{ if(ev.name&&ev.name!=='word')return; if(wi>=0&&wi<words.length){clearHighlight();words[wi].classList.add('on');} wi++; };
+  u.onstart=()=>bListen.classList.add('playing');
+  u.onend=()=>{bListen.classList.remove('playing');clearHighlight();};
+  u.onerror=()=>{bListen.classList.remove('playing');clearHighlight();};
+  try{TTS.speak(u);}catch(_){bListen.classList.remove('playing');}
+}
+function speak(e){ stopSpeak(); if(!audioEl){audioEl=new Audio();}
+  audioEl.src='audio/'+e.num+'.mp3'; bListen.classList.add('playing'); let fb=false;
+  audioEl.onloadedmetadata=()=>runHighlight(audioEl.duration*1000);
+  audioEl.onended=()=>{bListen.classList.remove('playing');clearInterval(hlTimer);clearHighlight();};
+  audioEl.onerror=()=>{ if(fb)return; fb=true; bListen.classList.remove('playing'); speakBrowser(e); };
+  const p=audioEl.play(); if(p&&p.catch){p.catch(()=>{if(!fb){fb=true;bListen.classList.remove('playing');speakBrowser(e);}});}
+}
+bListen.onclick=()=>{ if(currentNum) speak(byNum[currentNum]); };
+document.getElementById('b-stop').onclick=stopSpeak;
+
+// ===== Quiz =====
+const RECORD_KEY='pro_quiz_record';
+let record=+(localStorage.getItem(RECORD_KEY)||0);
+let score=0,streak=0,answered=false,maxZ=36,gameType='mix',correctNum=null;
+document.getElementById('q-best').textContent=record?('🏆 Ton record de série : '+record):'';
+function rnd(a){return a[Math.floor(Math.random()*a.length)];}
+function sample(pool,n,exclude){ const r=[]; const p=pool.filter(x=>x!==exclude);
+  while(r.length<n&&p.length){ const i=Math.floor(Math.random()*p.length); r.push(p.splice(i,1)[0]); } return r; }
+
+document.getElementById('q-start').onclick=()=>{
+  maxZ=+document.getElementById('q-diff').value;
+  gameType=document.getElementById('q-type').value;
+  score=0;streak=0;
+  document.getElementById('quiz-setup').style.display='none';
+  document.getElementById('quiz-play').style.display='block';
+  document.getElementById('q-record').textContent=record;
+  nextQuestion();
+};
+document.getElementById('q-quit').onclick=()=>{
+  document.getElementById('quiz-setup').style.display='flex';
+  document.getElementById('quiz-play').style.display='none';
+  document.getElementById('q-best').textContent=record?('🏆 Ton record de série : '+record):'';
+};
+document.getElementById('q-next').onclick=nextQuestion;
+
+function nextQuestion(){
+  answered=false;
+  document.getElementById('q-feedback').textContent='';
+  document.getElementById('q-next').style.display='none';
+  const pool=els.filter(e=>e.num<=maxZ);
+  const type=gameType==='mix'?rnd(['sym2nm','nm2sym','indice','num','cat']):gameType;
+  const e=rnd(pool); correctNum=e.num;
+  const prompt=document.getElementById('q-prompt'), opts=document.getElementById('q-opts');
+  let optionEls=[], correct, render;
+  if(type==='sym2nm'){
+    prompt.innerHTML=`<div class="big" style="background:${cats[e.cat][1]}">${e.sym}</div><div class="q">Quel est cet élément ?</div>`;
+    optionEls=[e,...sample(pool,3,e)]; correct=e.nm; render=x=>x.nm;
+  } else if(type==='nm2sym'){
+    prompt.innerHTML=`<div class="q">Quel est le symbole de <b>${e.nm}</b> ?</div>`;
+    optionEls=[e,...sample(pool,3,e)]; correct=e.sym; render=x=>x.sym;
+  } else if(type==='indice'){
+    prompt.innerHTML=`<div class="q">Devine l'élément 🔎</div><div class="hintline">${e.desc}</div>`;
+    optionEls=[e,...sample(pool,3,e)]; correct=e.nm; render=x=>x.nm;
+  } else if(type==='num'){
+    prompt.innerHTML=`<div class="q">Quel est le numéro atomique de <b>${e.nm}</b> ?</div>`;
+    const nums=new Set([e.num]); while(nums.size<4){ nums.add(rnd(pool).num); }
+    optionEls=[...nums].map(n=>({num:n})); correct=String(e.num); render=x=>String(x.num);
+  } else { // cat
+    prompt.innerHTML=`<div class="big" style="background:${cats[e.cat][1]}">${e.sym}</div><div class="q">À quelle famille appartient <b>${e.nm}</b> ?</div>`;
+    const catKeys=Object.keys(cats); const wrong=sample(catKeys.filter(c=>c!==e.cat),3);
+    optionEls=[e.cat,...wrong].map(c=>({cat:c})); correct=cats[e.cat][0]; render=x=>cats[x.cat][0];
+  }
+  // mélanger
+  for(let i=optionEls.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [optionEls[i],optionEls[j]]=[optionEls[j],optionEls[i]]; }
+  opts.innerHTML='';
+  optionEls.forEach(o=>{
+    const b=document.createElement('button'); b.className='qopt'; b.textContent=render(o);
+    b.onclick=()=>answer(b,render(o)===correct,opts,correct,render,optionEls);
+    opts.appendChild(b);
+  });
+}
+function answer(btn,isRight,opts,correct){
+  if(answered)return; answered=true;
+  Array.from(opts.children).forEach(b=>{ b.disabled=true;
+    if(b.textContent===correct) b.classList.add('good'); });
+  const fb=document.getElementById('q-feedback');
+  if(isRight){ score++; streak++; btn.classList.add('good');
+    fb.style.color='#6ee87a'; fb.textContent=rnd(['Bravo ! 🎉','Exact ! ✅','Super ! 🌟','Parfait ! 👏']);
+    if(streak>record){ record=streak; localStorage.setItem(RECORD_KEY,record); }
+  } else { streak=0; btn.classList.add('bad');
+    fb.style.color='#ff6b6b'; fb.textContent='Oups ! La bonne réponse était : '+correct;
+  }
+  document.getElementById('q-score').textContent=score;
+  document.getElementById('q-streak').textContent=streak;
+  document.getElementById('q-record').textContent=record;
+  document.getElementById('q-next').style.display='block';
+}
+</script>
+</body>
+</html>

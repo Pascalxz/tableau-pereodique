@@ -1,21 +1,48 @@
 TABLEAU PÉRIODIQUE DE THOMAS — mode d'emploi
 =============================================
 
-CONTENU
-- index.html         : la page du tableau périodique
-- audio/             : les 118 voix (un MP3 par élément), voix française
+TROIS VERSIONS (du plus simple au plus complet)
+- index.html   : 🌱 BASE — le tableau, un clic lit le nom et l'explication
+                 (les mots s'allument un par un pendant la lecture).
+- avance.html  : 🔬 AVANCÉ — tout ce qu'il y a dans la base, PLUS une fiche
+                 complète par élément : masse atomique, état, électronégativité,
+                 densité, points de fusion/ébullition, année de découverte,
+                 configuration électronique et modèle de Bohr (les électrons
+                 sur leurs couches). Recherche par nom, symbole OU numéro.
+- pro.html     : 🚀 PRO — tout l'avancé, PLUS des outils :
+                 * Colorer le tableau par propriété (électronégativité, masse,
+                   point de fusion, densité, état) pour voir les tendances.
+                 * Comparer jusqu'à 3 éléments côte à côte (avec petits graphes).
+                 * Mode QUIZ avec 5 jeux (symbole→nom, nom→symbole, devine par
+                   l'indice, numéro atomique, famille), 3 niveaux de difficulté,
+                   score, série et record gardé sur l'appareil.
+
+On passe d'une version à l'autre avec les boutons 🌱 Base / 🔬 Avancé / 🚀 Pro
+en haut de chaque page.
+
+AUTRES FICHIERS
+- elements.js    : les données des 118 éléments (utilisé par Avancé et Pro).
+- audio/         : les 118 voix (un MP3 par élément), voix française.
+- build_data.py  : script qui fabrique elements.js (à relancer seulement si on
+                   modifie les données : "python3 build_data.py").
 
 COMMENT L'UTILISER
-1. Garde le dossier "audio" À CÔTÉ du fichier index.html (ne les sépare pas).
+1. Garde TOUS les fichiers ensemble (index.html, avance.html, pro.html,
+   elements.js et le dossier "audio").
 2. Double-clique sur index.html : ça s'ouvre dans ton navigateur.
-3. Clique sur un élément -> la voix lit le nom et l'explication,
-   et les mots s'allument un par un pendant la lecture.
+3. Clique sur un élément -> sa fiche s'ouvre. Dans la base et l'avancé, la voix
+   lit le nom et l'explication.
 
 SUR TÉLÉPHONE / TABLETTE
 - Le plus simple : mets le dossier dans un service comme Google Drive,
   ou héberge-le (Pascal : un simple déploiement Vercel statique fonctionne).
 - L'audio des MP3 joue partout, sans dépendre des voix installées sur l'appareil.
 
-NOTE
-- Si jamais un MP3 manquait, la page bascule automatiquement sur la voix
-  intégrée du navigateur (qui, elle, dépend de l'appareil).
+NOTES
+- Si un MP3 manque, la page bascule automatiquement sur la voix intégrée du
+  navigateur (qui, elle, dépend de l'appareil).
+- Les valeurs des éléments très lourds (au-delà de ~100) sont parfois inconnues
+  des scientifiques : elles s'affichent alors « inconnu ».
+- La configuration électronique suit la règle de remplissage (Aufbau) : pour
+  quelques métaux (cuivre, or, chrome...), la vraie configuration a une petite
+  exception, mais le total d'électrons par couche reste exact.
