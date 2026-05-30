@@ -1,12 +1,12 @@
 /* Service worker : rend l'app installable et utilisable hors-ligne.
    - On précharge la "coquille" (pages + données + icônes) à l'installation.
    - Les MP3 et les polices sont mis en cache au fur et à mesure qu'on les utilise. */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL   = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 
 const ASSETS = [
-  './', 'index.html', 'base.html', 'avance.html', 'pro.html', 'elements.js',
+  './', 'index.html', 'base.html', 'avance.html', 'pro.html', 'elements.js', 'quiz.js',
   'manifest.webmanifest', 'favicon.svg', 'favicon-32.png',
   'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'og-image.png'
 ];

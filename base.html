@@ -17,7 +17,7 @@
 <meta property="og:title" content="Le tableau périodique de Thomas">
 <meta property="og:description" content="Les 118 éléments à explorer, écouter, comparer — et un mode quiz. Pour Thomas.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="og-image.png">
+<meta property="og:image" content="https://thomas-ecru-two.vercel.app/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -163,6 +163,7 @@
       <input id="search" type="text" placeholder="Cherche un élément (or, fer, oxygène...)" autocomplete="off">
     </div>
     <label class="toggle"><input type="checkbox" id="autoread" checked> Lire à voix haute en ouvrant</label>
+    <button class="toggle" id="open-quiz" style="cursor:pointer">🎮 Quiz</button>
   </div>
   <div class="legend" id="legend"><button class="leg" data-cat="nonmetal"><i class="dot" style="background:#6ee87a"></i>Non-métaux</button><button class="leg" data-cat="noble"><i class="dot" style="background:#5ec8f2"></i>Gaz nobles</button><button class="leg" data-cat="alkali"><i class="dot" style="background:#ff8f6b"></i>Métaux alcalins</button><button class="leg" data-cat="alkaline"><i class="dot" style="background:#ffb454"></i>Alcalino-terreux</button><button class="leg" data-cat="transition"><i class="dot" style="background:#ffd23f"></i>Métaux de transition</button><button class="leg" data-cat="postmetal"><i class="dot" style="background:#b9c44a"></i>Métaux pauvres</button><button class="leg" data-cat="metalloid"><i class="dot" style="background:#7ee0c0"></i>Métalloïdes</button><button class="leg" data-cat="halogen"><i class="dot" style="background:#c98bff"></i>Halogènes</button><button class="leg" data-cat="lanthanide"><i class="dot" style="background:#ff9ec7"></i>Lanthanides</button><button class="leg" data-cat="actinide"><i class="dot" style="background:#f06292"></i>Actinides</button></div>
 </div>
@@ -398,7 +399,9 @@ function speak(e){
 bListen.onclick=()=>{ if(currentNum) speak(byNum[currentNum]); };
 document.getElementById('b-stop').onclick=stopSpeak;
 if(canSpeak && 'onvoiceschanged' in TTS){ try{ TTS.onvoiceschanged=()=>{}; }catch(_){} }
+document.getElementById('open-quiz').onclick=()=>Quiz.open(els,cats,{recordKey:'quiz_base',games:['mix','sym2nm','nm2sym','indice'],levels:[['Facile (1–20)',20],['Moyen (1–36)',36],['Tout (1–118)',118]]});
 </script>
+<script src="quiz.js"></script>
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
 </body>
 </html>
