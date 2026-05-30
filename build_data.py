@@ -6,8 +6,8 @@ densité, état, année de découverte) et calcule la configuration électroniqu
 et les couches (modèle de Bohr) pour les 118 éléments."""
 import json, re, io
 
-# --- 1. Récupérer les données de base depuis index.html ---
-html = io.open('index.html', encoding='utf-8').read()
+# --- 1. Récupérer les données de base depuis base.html ---
+html = io.open('base.html', encoding='utf-8').read()
 m = re.search(r'const DATA = (\{.*?\});', html, re.S)
 base = json.loads(m.group(1))
 els = {e['num']: e for e in base['elements']}

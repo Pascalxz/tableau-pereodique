@@ -4,6 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tableau périodique — Pro</title>
+<meta name="description" content="Explore, colore par propriété, compare des éléments et teste-toi avec le mode quiz.">
+<meta name="theme-color" content="#0d1117">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Éléments">
+<meta property="og:title" content="Tableau périodique — Pro">
+<meta property="og:description" content="Coloration par propriété, comparaison d'éléments et mode quiz.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="og-image.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -185,7 +200,8 @@
   <h1>Le tableau périodique</h1>
   <p class="sub">Explore, colore par propriété, compare des éléments et teste-toi avec le mode quiz.</p>
   <nav class="versions">
-    <a href="index.html">🌱 Base</a>
+    <a href="index.html">🏠 Accueil</a>
+    <a href="base.html">🌱 Base</a>
     <a href="avance.html">🔬 Avancé</a>
     <a href="pro.html" class="on">🚀 Pro</a>
   </nav>
@@ -653,5 +669,6 @@ function answer(btn,isRight,opts,correct){
   document.getElementById('q-next').style.display='block';
 }
 </script>
+<script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
 </body>
 </html>
