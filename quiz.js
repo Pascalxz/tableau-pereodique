@@ -178,7 +178,7 @@
       games=opts.games||['mix','sym2nm','nm2sym','indice','num','cat'];
       levels=opts.levels||[['Facile (1–36)',36],['Moyen (1–86)',86],['Tout (1–118)',118]];
       recordKey=opts.recordKey||'quiz_record';
-      record=+(localStorage.getItem(recordKey)||0);
+      try{ record=+(localStorage.getItem(recordKey)||0); }catch(_){ record=0; }
       if(!built){ injectCSS(); build(); built=true; }
       fillSelects(); showSetup();
       history.pushState({qzModal:true},'');

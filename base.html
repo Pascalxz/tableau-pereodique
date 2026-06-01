@@ -402,6 +402,6 @@ if(canSpeak && 'onvoiceschanged' in TTS){ try{ TTS.onvoiceschanged=()=>{}; }catc
 document.getElementById('open-quiz').onclick=()=>Quiz.open(els,cats,{recordKey:'quiz_base',games:['mix','sym2nm','nm2sym','indice'],levels:[['Facile (1–20)',20],['Moyen (1–36)',36],['Tout (1–118)',118]]});
 </script>
 <script src="quiz.js"></script>
-<script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
+<script>if('serviceWorker' in navigator){var _hadCtrl=!!navigator.serviceWorker.controller;addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});var _swR=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(_swR)return;_swR=true;if(_hadCtrl)location.reload();});}</script>
 </body>
 </html>

@@ -174,8 +174,15 @@ const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
 const standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
 if(isIOS && !standalone){ document.getElementById('ios-hint').style.display='block'; }
 
-// Service worker (hors-ligne)
-if('serviceWorker' in navigator){ addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+// Service worker (hors-ligne) + rechargement auto quand une nouvelle version arrive
+if('serviceWorker' in navigator){
+  const hadCtrl=!!navigator.serviceWorker.controller;
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  let swReloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(swReloaded)return; swReloaded=true; if(hadCtrl) location.reload();
+  });
+}
 </script>
 </body>
 </html>

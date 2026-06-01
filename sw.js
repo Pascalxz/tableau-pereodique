@@ -1,7 +1,10 @@
 /* Service worker : rend l'app installable et utilisable hors-ligne.
-   - On précharge la "coquille" (pages + données + icônes) à l'installation.
-   - Les MP3 et les polices sont mis en cache au fur et à mesure qu'on les utilise. */
-const VERSION = 'v2';
+   Stratégie :
+   - HTML et JS (même origine) → RÉSEAU D'ABORD : on a toujours la dernière
+     version quand on est en ligne ; repli sur le cache si hors-ligne.
+   - Images, sons (MP3), polices → CACHE D'ABORD : rapides et hors-ligne.
+   La "coquille" est préchargée à l'installation. */
+const VERSION = 'v3';
 const SHELL   = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 
@@ -13,9 +16,7 @@ const ASSETS = [
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(SHELL)
-      .then(c => c.addAll(ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(SHELL).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
   );
 });
 
@@ -27,31 +28,41 @@ self.addEventListener('activate', e => {
   );
 });
 
+function putRuntime(req, res) {
+  const copy = res.clone();
+  caches.open(RUNTIME).then(c => { try { c.put(req, copy); } catch (_) {} });
+  return res;
+}
+
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  const sameOrigin = url.origin === location.origin;
 
-  if (url.origin === location.origin) {
-    // Même origine : cache d'abord, puis réseau (mis en cache pour la prochaine fois).
+  // HTML & JS de l'app : réseau d'abord (toujours frais), repli cache.
+  const isAppCode = sameOrigin && (req.mode === 'navigate' ||
+    url.pathname.endsWith('.html') || url.pathname.endsWith('.js'));
+  if (isAppCode) {
     e.respondWith(
-      caches.match(req).then(hit => hit || fetch(req).then(res => {
-        const copy = res.clone();
-        caches.open(RUNTIME).then(c => { try { c.put(req, copy); } catch (_) {} });
-        return res;
-      }).catch(() => req.mode === 'navigate' ? caches.match('index.html') : Response.error()))
+      fetch(req).then(res => putRuntime(req, res))
+        .catch(() => caches.match(req).then(hit => hit || caches.match('index.html')))
     );
     return;
   }
 
-  // Autres origines (polices Google) : on sert le cache et on rafraîchit en arrière-plan.
+  // Autres ressources même origine (sons, icônes, manifest) : cache d'abord.
+  if (sameOrigin) {
+    e.respondWith(
+      caches.match(req).then(hit => hit || fetch(req).then(res => putRuntime(req, res)).catch(() => Response.error()))
+    );
+    return;
+  }
+
+  // Cross-origin (polices Google) : on sert le cache et on rafraîchit derrière.
   e.respondWith(
     caches.match(req).then(hit => {
-      const net = fetch(req).then(res => {
-        const copy = res.clone();
-        caches.open(RUNTIME).then(c => { try { c.put(req, copy); } catch (_) {} });
-        return res;
-      }).catch(() => hit);
+      const net = fetch(req).then(res => putRuntime(req, res)).catch(() => hit);
       return hit || net;
     })
   );

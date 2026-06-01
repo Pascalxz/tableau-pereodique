@@ -593,7 +593,7 @@ document.getElementById('b-stop').onclick=stopSpeak;
 
 // ===== Quiz =====
 const RECORD_KEY='pro_quiz_record';
-let record=+(localStorage.getItem(RECORD_KEY)||0);
+let record=0; try{ record=+(localStorage.getItem(RECORD_KEY)||0); }catch(_){}
 let score=0,streak=0,answered=false,maxZ=36,gameType='mix',correctNum=null;
 document.getElementById('q-best').textContent=record?('🏆 Ton record de série : '+record):'';
 function rnd(a){return a[Math.floor(Math.random()*a.length)];}
@@ -659,7 +659,7 @@ function answer(btn,isRight,opts,correct){
   const fb=document.getElementById('q-feedback');
   if(isRight){ score++; streak++; btn.classList.add('good');
     fb.style.color='#6ee87a'; fb.textContent=rnd(['Bravo ! 🎉','Exact ! ✅','Super ! 🌟','Parfait ! 👏']);
-    if(streak>record){ record=streak; localStorage.setItem(RECORD_KEY,record); }
+    if(streak>record){ record=streak; try{localStorage.setItem(RECORD_KEY,record);}catch(_){} }
   } else { streak=0; btn.classList.add('bad');
     fb.style.color='#ff6b6b'; fb.textContent='Oups ! La bonne réponse était : '+correct;
   }
@@ -669,6 +669,6 @@ function answer(btn,isRight,opts,correct){
   document.getElementById('q-next').style.display='block';
 }
 </script>
-<script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
+<script>if('serviceWorker' in navigator){var _hadCtrl=!!navigator.serviceWorker.controller;addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});var _swR=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(_swR)return;_swR=true;if(_hadCtrl)location.reload();});}</script>
 </body>
 </html>
