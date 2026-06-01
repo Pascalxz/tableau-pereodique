@@ -57,6 +57,11 @@
     font-size:1rem;font-weight:600;padding:13px 22px;border-radius:14px;border:none;cursor:pointer;
     background:linear-gradient(95deg,#ffd23f,#6ee87a);color:#0c1118}
   .install:active{transform:translateY(1px)}
+  .quizbtn{margin-top:18px;display:inline-flex;align-items:center;gap:9px;font-family:inherit;
+    font-size:1.05rem;font-weight:600;padding:14px 26px;border-radius:14px;border:none;cursor:pointer;
+    background:linear-gradient(95deg,#6ee87a,#5ec8f2);color:#0c1118}
+  .quizbtn:active{transform:translateY(1px)}
+  .hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;align-items:center}
   .ios-hint{display:none;margin:16px auto 0;max-width:440px;color:var(--soft);font-size:.92rem;
     background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:12px 16px;line-height:1.5}
 
@@ -96,7 +101,10 @@
     <div class="kicker">Pour Thomas</div>
     <h1>Le tableau périodique</h1>
     <p class="sub">Les 118 éléments qui composent tout l'univers. Choisis ton niveau : explore, plonge dans les détails, ou défie-toi avec le quiz.</p>
-    <button class="install" id="install">📲 Installer l'app</button>
+    <div class="hero-actions">
+      <button class="quizbtn" id="quiz-home">🎮 Quiz éclair</button>
+      <button class="install" id="install">📲 Installer l'app</button>
+    </div>
     <div class="ios-hint" id="ios-hint">💡 Pour l'installer sur iPhone/iPad : touche le bouton <b>Partager</b> ⬆️, puis <b>« Sur l'écran d'accueil »</b>.</div>
   </div>
 
@@ -144,7 +152,16 @@
   <p class="foot">Fonctionne hors-ligne une fois ouvert · Installe-le sur ton écran d'accueil comme une vraie app.<br>Fait avec ❤️ pour Thomas.</p>
 </div>
 
+<script src="elements.js"></script>
+<script src="quiz.js"></script>
 <script>
+// Quiz éclair (tous les jeux, tous les niveaux) — données partagées
+document.getElementById('quiz-home').onclick=function(){
+  if(window.PERIODIC && window.Quiz){
+    Quiz.open(PERIODIC.elements, PERIODIC.cats, {recordKey:'quiz_accueil'});
+  }
+};
+
 // Installation PWA (Android/Chrome)
 let deferred=null;
 const installBtn=document.getElementById('install');
